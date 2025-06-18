@@ -42,11 +42,17 @@ class AuthService {
   public async login(credentials: LoginCredentials): Promise<void> {
     console.log('AuthService: Attempting login');
     try {
-      const response = await axios.post(`${API_URL}/auth/login`, credentials);
-      const { token } = response.data;
-      this.token = token;
-      this.user = this.getUserFromToken(token);
-      localStorage.setItem('token', token);
+      // Send as form data to /token endpoint
+      const params = new URLSearchParams();
+      params.append('username', credentials.email); // using email as username
+      params.append('password', credentials.password);
+      const response = await axios.post(`${API_URL}/token`, params, {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      });
+      const { access_token } = response.data;
+      this.token = access_token;
+      this.user = this.getUserFromToken(access_token);
+      localStorage.setItem('token', access_token);
       console.log('AuthService: Login successful');
     } catch (error) {
       console.error('AuthService: Login failed:', error);

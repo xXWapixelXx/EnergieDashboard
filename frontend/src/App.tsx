@@ -18,7 +18,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 function App() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -86,27 +86,27 @@ function App() {
           className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-12 border border-white/20"
         >
           <form onSubmit={handleSubmit} className="space-y-8">
-            {/* Email Field */}
+            {/* Username Field */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.5 }}
             >
-              <label htmlFor="email" className="block text-lg font-semibold text-gray-200 mb-2">
-                Email
+              <label htmlFor="username" className="block text-lg font-semibold text-gray-200 mb-2">
+                Username
               </label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                   <EnvelopeIcon className="h-6 w-6 text-gray-400 group-focus-within:text-primary-400 transition-colors" />
                 </div>
                 <input
-                  id="email"
-                  type="email"
+                  id="username"
+                  type="text"
                   required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   className="input-field pl-14 py-4 text-lg bg-white/5 border-white/10 text-white placeholder-gray-400 focus:border-primary-500 focus:ring-primary-500"
-                  placeholder="Enter your email"
+                  placeholder="Enter your username"
                 />
               </div>
             </motion.div>
