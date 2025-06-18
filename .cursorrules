@@ -1,0 +1,151 @@
+# Scratchpad
+
+## Smart Energy Dashboard Project
+
+### Project Overview
+- Real-time energy consumption monitoring system
+- Target users: Regular users and admin/superadmin users
+- Goal: Provide better insights and control over energy usage
+
+### User Stories by Role
+
+#### Regular User Stories
+1. Real-time Monitoring
+   - As a user, I want to see my energy consumption in real-time
+   - As a user, I want to receive notifications when consumption is too high
+   - As a user, I want to manage my own devices (e.g., smart plugs)
+
+2. Data Analysis
+   - As a user, I want to view historical data
+   - As a user, I want to customize my graphs (type and period)
+   - As a user, I want to see predictions of my expected energy consumption
+
+3. Settings & Preferences
+   - As a user, I want to adjust notification settings
+   - As a user, I want to manage which devices participate in monitoring
+
+#### Admin Stories
+1. User Management
+   - As an admin, I want to manage users (create, modify, delete accounts)
+   - As an admin, I want to view and manage notifications and alerts
+
+#### Superadmin Stories
+1. System Management
+   - As a superadmin, I want to manage and retrain AI models
+   - As a superadmin, I want to monitor system status
+
+### Development Phases
+
+#### Phase 1: Core Infrastructure
+[ ] Project setup with Vue.js 3 + Vite
+[ ] Database schema design and implementation
+[ ] Basic authentication system
+[ ] API endpoints structure
+[ ] Security implementation (login, authorization, tokens)
+[ ] Data processing pipeline (ETL process)
+[ ] Basic user role system (customer, admin, superadmin)
+
+#### Phase 2: Real-time Features
+[ ] Real-time data fetching from API
+[ ] Live dashboard implementation
+[ ] Basic device management
+[ ] Real-time notifications system
+[ ] Interactive and customizable graphs
+[ ] Historical data filtering and viewing
+[ ] Alert system for threshold monitoring
+
+#### Phase 3: Data Analysis & Visualization
+[ ] Historical data storage and retrieval
+[ ] Advanced graph customization
+   - Multiple chart types
+   - Time period selection
+   - Data comparison features
+[ ] Data export functionality
+[ ] Interactive data filtering
+[ ] Custom alert thresholds
+[ ] Data visualization components
+
+#### Phase 4: AI Integration
+[ ] AI model implementation
+[ ] Consumption prediction system
+[ ] Model training pipeline
+[ ] Prediction visualization
+[ ] AI management panel for superadmins
+[ ] Model performance monitoring
+[ ] Automated retraining system
+
+#### Phase 5: Admin Features
+[ ] User management interface
+[ ] System monitoring dashboard
+[ ] AI model management
+[ ] Notification management
+[ ] Device management system
+[ ] Alert configuration interface
+[ ] System health monitoring
+
+#### Phase 6: Notification System
+[ ] Email notification system
+[ ] Push notification implementation
+[ ] Notification preferences
+[ ] Alert threshold configuration
+[ ] Notification history
+[ ] Notification templates
+
+#### Phase 7: Settings & Configuration
+[ ] Device management interface
+[ ] Notification settings
+[ ] Graph customization options
+[ ] User preferences
+[ ] System configuration
+[ ] Role-based access control
+
+### Tech Stack
+- Frontend: Vue.js 3 with Vite
+- Backend: TBD (Python/FastAPI or Node.js)
+- Database: PostgreSQL
+- AI/ML: Python (scikit-learn/TensorFlow)
+- Real-time: WebSocket
+- Cloud hosting: AWS/Azure
+- Design tools: Figma, draw.io, UXPilot
+- Visualization: Chart.js/D3.js
+- Authentication: JWT/OAuth2
+
+### Initial Development Focus
+1. Data Pipeline Setup
+   [ ] CSV data import system
+   [ ] Data cleaning and processing
+   [ ] Database schema for energy consumption
+   [ ] Basic API endpoints for data access
+
+2. Basic Dashboard
+   [ ] Real-time consumption display
+   [ ] Basic graph visualization
+   [ ] Time period selection
+   [ ] Data refresh mechanism
+
+3. User Interface
+   [ ] Login system
+   [ ] Role-based access control
+   [ ] Basic settings page
+   [ ] Device management interface
+
+### Current Focus
+[ ] Initial project setup
+[ ] Tech stack finalization
+[ ] Architecture design
+[ ] Database schema design
+
+### Notes
+- Focus on real-time capabilities from the start
+- Ensure scalable architecture for future growth
+- Implement strong security measures
+- Design for mobile responsiveness
+- Plan for easy integration of new devices
+- Consider data backup and recovery strategies
+- Implement proper error handling and logging
+- Design for easy maintenance and updates
+- Consider internationalization from the start
+- Plan for monitoring and analytics
+- Start with CSV data import before implementing real API
+- Implement basic visualization before adding AI features
+- Focus on core functionality before adding advanced features 
