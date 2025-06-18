@@ -101,3 +101,48 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+/* Animated gradient border for the login card */
+.card-animated-border {
+  position: relative;
+  z-index: 10;
+}
+.card-animated-border::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  z-index: -1;
+  border-radius: 1.5rem;
+  padding: 2px;
+  background: linear-gradient(270deg, #0ea5e9, #a21caf, #f472b6, #0ea5e9);
+  background-size: 600% 600%;
+  animation: borderGradientMove 8s ease-in-out infinite;
+}
+@keyframes borderGradientMove {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Sparkle/particle overlay */
+.sparkle {
+  position: absolute;
+  pointer-events: none;
+  z-index: 20;
+  animation: sparkleMove 6s linear infinite;
+  opacity: 0.7;
+}
+@keyframes sparkleMove {
+  0% { transform: translateY(0) scale(1); opacity: 0.7; }
+  50% { transform: translateY(-40px) scale(1.2); opacity: 1; }
+  100% { transform: translateY(0) scale(1); opacity: 0.7; }
+}
+
+/* Button pulse and ripple */
+.btn-primary:active {
+  animation: btnRipple 0.4s;
+}
+@keyframes btnRipple {
+  0% { box-shadow: 0 0 0 0 #38bdf8; }
+  100% { box-shadow: 0 0 0 16px rgba(56,189,248,0); }
+}
