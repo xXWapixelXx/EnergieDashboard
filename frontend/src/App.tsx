@@ -39,7 +39,7 @@ function App() {
         </div>
       </div>
 
-      <div className="w-full max-w-lg mx-auto relative z-10">
+      <div className="w-full max-w-lg mx-auto relative z-10 flex flex-col items-center">
         {/* Logo and Title */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -137,21 +137,26 @@ function App() {
             </motion.div>
 
             {/* Remember Me & Forgot Password */}
-            <div className="flex flex-col gap-2">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7 }}
+              className="flex items-center justify-between"
+            >
               <div className="flex items-center">
                 <input
                   id="remember-me"
                   type="checkbox"
-                  className="h-6 w-6 accent-primary-500 rounded-md border-2 border-primary-400 focus:ring-2 focus:ring-primary-400 transition-all duration-150 shadow-sm mr-3"
+                  className="h-5 w-5 text-primary-500 focus:ring-primary-500 border-gray-600 rounded bg-white/5"
                 />
-                <label htmlFor="remember-me" className="block text-base text-gray-200 select-none cursor-pointer">
+                <label htmlFor="remember-me" className="ml-3 block text-base text-gray-300">
                   Remember me
                 </label>
               </div>
-              <a href="#" className="text-base font-medium text-primary-400 hover:text-primary-300 transition-colors text-center mt-2">
+              <a href="#" className="text-base font-medium text-primary-400 hover:text-primary-300 transition-colors">
                 Forgot password?
               </a>
-            </div>
+            </motion.div>
 
             {/* Submit Button */}
             <motion.button
@@ -192,6 +197,27 @@ function App() {
               </a>
             </p>
           </motion.div>
+        </motion.div>
+
+        {/* Info/Tip Card under the login card */}
+        <motion.div
+          initial={{ opacity: 0, y: 30, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.7, delay: 1.1, type: 'spring' }}
+          className="mt-10 w-full max-w-md bg-white/20 backdrop-blur-lg border border-white/30 shadow-xl rounded-2xl px-8 py-6 flex flex-col items-center gap-2"
+        >
+          <div className="flex items-center gap-3 mb-2">
+            <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-tr from-primary-400 via-purple-400 to-pink-400 shadow-lg animate-pulse">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="white" className="w-6 h-6">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M12 20a8 8 0 100-16 8 8 0 000 16z" />
+              </svg>
+            </span>
+            <span className="text-xl font-bold text-white drop-shadow">Did you know?</span>
+          </div>
+          <p className="text-center text-white/90 text-base font-medium">
+            You can manage your energy usage more efficiently by checking your dashboard daily.<br/>
+            <span className="text-primary-200 font-semibold">Stay in control, save more!</span>
+          </p>
         </motion.div>
       </div>
     </div>
