@@ -58,7 +58,7 @@ function App() {
             }}
             className="w-28 h-28 mx-auto mb-8 rounded-2xl gradient-bg flex items-center justify-center shadow-2xl"
           >
-            <span className="text-5xl font-bold text-white">ED</span>
+            <span className="text-6xl" role="img" aria-label="lightning">⚡</span>
           </motion.div>
           <motion.h1
             initial={{ opacity: 0 }}
@@ -66,7 +66,7 @@ function App() {
             transition={{ delay: 0.3 }}
             className="text-5xl font-bold text-white mb-3"
           >
-            Welcome Back
+            EnergieDashboard
           </motion.h1>
           <motion.p
             initial={{ opacity: 0 }}
