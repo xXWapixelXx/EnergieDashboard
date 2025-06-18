@@ -14,8 +14,12 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 
 class DataProcessor:
-    def __init__(self):
+    def __init__(self, host=None, user=None, password=None, database=None):
         """Initialize the data processor with database connection."""
+        self.host = host or os.getenv('DB_HOST', 'localhost')
+        self.user = user or os.getenv('DB_USER', 'root')
+        self.password = password or os.getenv('DB_PASSWORD', '')
+        self.database = database or os.getenv('DB_NAME', 'energydashboard')
         self.conn = None
         self.connect()
 
@@ -23,10 +27,10 @@ class DataProcessor:
         """Connect to the MySQL database."""
         try:
             self.conn = mysql.connector.connect(
-                host=os.getenv('DB_HOST', 'localhost'),
-                user=os.getenv('DB_USER', 'root'),
-                password=os.getenv('DB_PASSWORD', ''),
-                database=os.getenv('DB_NAME', 'energydashboard')
+                host=self.host,
+                user=self.user,
+                password=self.password,
+                database=self.database
             )
             logger.info("Successfully connected to database")
         except Error as e:
