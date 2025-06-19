@@ -40,22 +40,34 @@ class AuthService {
   }
 
   public async login(credentials: LoginCredentials): Promise<void> {
-    console.log('AuthService: Attempting login');
+    console.log('AuthService: Attempting login', credentials);
     try {
       // Send as form data to /token endpoint
       const params = new URLSearchParams();
       params.append('username', credentials.email); // using email as username
       params.append('password', credentials.password);
+      console.log('AuthService: Posting to', `${API_URL}/token`, params.toString());
+      // Extra debug: log before axios
+      console.log('AuthService: About to send axios POST');
       const response = await axios.post(`${API_URL}/token`, params, {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       });
+      // Extra debug: log after axios
+      console.log('AuthService: Login response', response);
       const { access_token } = response.data;
       this.token = access_token;
       this.user = this.getUserFromToken(access_token);
       localStorage.setItem('token', access_token);
       console.log('AuthService: Login successful');
-    } catch (error) {
-      console.error('AuthService: Login failed:', error);
+    } catch (error: any) {
+      // Extra debug: log error details
+      if (error.response) {
+        console.error('AuthService: Login failed with response:', error.response);
+      } else if (error.request) {
+        console.error('AuthService: Login failed, no response received:', error.request);
+      } else {
+        console.error('AuthService: Login failed, error:', error.message);
+      }
       throw error;
     }
   }
@@ -77,4 +89,5 @@ class AuthService {
 }
 
 // Create and export the singleton instance
-export const authService = new AuthService(); 
+const authService = new AuthService();
+export default authService; 

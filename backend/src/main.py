@@ -68,11 +68,12 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> UserInDB:
 # Authentication endpoints
 @app.post("/token", response_model=Token)
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    # Accepts either username or email in the 'username' field
     user = user_db.verify_user_credentials(form_data.username, form_data.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
+            detail="Incorrect username/email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
     

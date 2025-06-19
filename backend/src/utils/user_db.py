@@ -157,13 +157,12 @@ class UserDB:
         finally:
             cursor.close()
 
-    def verify_user_credentials(self, username: str, password: str) -> Optional[UserInDB]:
-        """Verify user credentials."""
+    def verify_user_credentials(self, username_or_email: str, password: str) -> Optional[UserInDB]:
+        """Verify user credentials by username or email."""
         try:
             cursor = self.connection.cursor(dictionary=True)
-            cursor.execute("SELECT * FROM users WHERE username = %s", (username,))
+            cursor.execute("SELECT * FROM users WHERE username = %s OR email = %s", (username_or_email, username_or_email))
             user_data = cursor.fetchone()
-            
             if user_data and verify_password(password, user_data["password_hash"]):
                 return UserInDB(**user_data)
             return None

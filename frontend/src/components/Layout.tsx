@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { authService } from '../services/auth';
+import authService from '../services/auth';
 import { useNavigate } from 'react-router-dom';
 
 interface LayoutProps {
