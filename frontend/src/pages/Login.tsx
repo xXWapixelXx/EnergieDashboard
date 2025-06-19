@@ -44,7 +44,7 @@ const Login = () => {
   };
 
   return (
-    <div className="w-full min-h-screen flex items-center justify-center relative overflow-hidden">
+    <div className="min-h-screen w-screen flex items-center justify-center relative overflow-hidden">
       {/* Animated Sparkle/particle overlay */}
       <svg className="sparkle left-1/4 top-1/4 w-8 h-8" style={{animationDelay: '0s'}} viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="2" fill="#fff" opacity="0.8"/><circle cx="12" cy="12" r="6" stroke="#38bdf8" strokeWidth="1.5" opacity="0.5"/></svg>
       <svg className="sparkle right-1/3 top-1/2 w-6 h-6" style={{animationDelay: '2s'}} viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="1.5" fill="#fff" opacity="0.7"/><circle cx="12" cy="12" r="4" stroke="#a21caf" strokeWidth="1.2" opacity="0.4"/></svg>
