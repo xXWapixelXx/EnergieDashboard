@@ -1,5 +1,9 @@
-import { FiHome, FiBarChart2, FiSettings, FiBell, FiAlertTriangle, FiUser, FiBattery, FiSun, FiTrendingUp, FiChevronRight } from 'react-icons/fi';
+import { FiHome, FiBarChart2, FiSettings, FiBell, FiAlertTriangle, FiUser, FiBattery, FiSun, FiTrendingUp, FiChevronRight, FiEye, FiEyeOff } from 'react-icons/fi';
 import { motion } from 'framer-motion';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import { widgetRegistry } from '../components/widgets';
+import React from 'react';
+import type { DropResult, DraggableProvided, DroppableProvided, DraggableStateSnapshot } from 'react-beautiful-dnd';
 
 const navItems = [
   { icon: <FiHome />, label: 'Dashboard', active: true },
@@ -15,7 +19,48 @@ const alerts = [
   { icon: <FiBattery className="text-green-500" />, title: 'Batterij volledig opgeladen', desc: 'Automatisch overgeschakeld naar netvoeding · 08:45' },
 ];
 
+const WIDGETS_STORAGE_KEY = 'dashboard_widgets_v1';
+
+function getInitialWidgetState() {
+  const saved = localStorage.getItem(WIDGETS_STORAGE_KEY);
+  if (saved) {
+    try {
+      return JSON.parse(saved);
+    } catch {}
+  }
+  // Default: all widgets visible, default order
+  return {
+    order: widgetRegistry.map(w => w.id),
+    hidden: [],
+  };
+}
+
 const Dashboard = () => {
+  const [widgetState, setWidgetState] = React.useState(getInitialWidgetState());
+  const [showSettings, setShowSettings] = React.useState(false);
+
+  React.useEffect(() => {
+    localStorage.setItem(WIDGETS_STORAGE_KEY, JSON.stringify(widgetState));
+  }, [widgetState]);
+
+  const onDragEnd = (result: DropResult) => {
+    if (!result.destination) return;
+    const newOrder = Array.from(widgetState.order);
+    const [removed] = newOrder.splice(result.source.index, 1);
+    newOrder.splice(result.destination.index, 0, removed);
+    setWidgetState((ws: typeof widgetState) => ({ ...ws, order: newOrder }));
+  };
+
+  const hideWidget = (id: string) => {
+    setWidgetState((ws: typeof widgetState) => ({ ...ws, hidden: [...ws.hidden, id] }));
+  };
+
+  const showWidget = (id: string) => {
+    setWidgetState((ws: typeof widgetState) => ({ ...ws, hidden: ws.hidden.filter((h: string) => h !== id) }));
+  };
+
+  const visibleWidgets = widgetState.order.filter(id => !widgetState.hidden.includes(id));
+
   return (
     <div className="relative min-h-screen w-screen overflow-x-hidden bg-gradient-to-br from-primary-900 via-purple-900 to-gray-900 flex items-stretch">
       {/* Animated, glassy floating sidebar */}
@@ -67,108 +112,68 @@ const Dashboard = () => {
       {/* Main content grid */}
       <main className="flex-1 flex flex-col py-12 ml-32">
         <div className="px-2 sm:px-4 md:px-8 w-full">
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, type: 'spring' }}
-            className="w-full grid gap-4 mb-10 justify-stretch"
-            style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}
-          >
-            {/* Live Energy Usage */}
-            <motion.div
-              whileHover={{ scale: 1.02, boxShadow: '0 8px 32px 0 rgba(56,189,248,0.18)' }}
-              className="w-full h-full bg-white/20 backdrop-blur-2xl rounded-3xl shadow-2xl p-6 flex flex-col min-h-[240px] border border-white/20 relative overflow-hidden"
+          {/* Floating widget settings button, bottom right */}
+          <div className="fixed right-8 bottom-8 z-40">
+            <button
+              className="flex items-center gap-2 px-4 py-3 rounded-2xl bg-white/30 backdrop-blur-2xl border border-white/30 shadow-2xl text-primary-900 hover:bg-primary-600/80 hover:text-white transition-all text-lg font-semibold"
+              onClick={() => setShowSettings(s => !s)}
             >
-              <div className="font-bold text-xl md:text-2xl text-primary-100 mb-2 flex items-center gap-2">
-                <FiTrendingUp className="text-primary-400" /> Live Energieverbruik
-              </div>
-              <div className="flex-1 flex items-center justify-center text-primary-200 text-lg">Line Chart - Energieverbruik per uur</div>
-              <div className="absolute right-6 top-6 w-16 h-16 bg-primary-400/10 rounded-full blur-2xl"></div>
-            </motion.div>
-            {/* AI Prediction */}
-            <motion.div
-              whileHover={{ scale: 1.04, boxShadow: '0 8px 32px 0 rgba(162,28,175,0.18)' }}
-              className="w-full h-full bg-white/20 backdrop-blur-2xl rounded-3xl shadow-2xl p-6 flex flex-col items-center justify-center border border-white/20 relative overflow-hidden"
-            >
-              <div className="font-bold text-lg md:text-xl text-primary-100 mb-2 flex items-center gap-2">
-                <FiBell className="text-pink-400" /> AI Voorspelling
-              </div>
-              <div className="text-4xl font-extrabold text-primary-400 mb-1 drop-shadow">24.8 kWh</div>
-              <div className="text-primary-200 text-base mb-2">Verwacht verbruik morgen</div>
-              <div className="w-full flex justify-center"><span className="text-primary-400 text-xs">AI Trend Grafiek</span></div>
-              <div className="absolute left-6 bottom-6 w-12 h-12 bg-pink-400/10 rounded-full blur-2xl"></div>
-            </motion.div>
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, type: 'spring', delay: 0.2 }}
-            className="w-full grid gap-4 mb-10 justify-stretch"
-            style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}
-          >
-            {/* Solar Panel */}
-            <motion.div
-              whileHover={{ scale: 1.04, boxShadow: '0 8px 32px 0 rgba(253,224,71,0.18)' }}
-              className="w-full h-full bg-white/20 backdrop-blur-2xl rounded-3xl shadow-2xl p-6 flex flex-col border border-white/20 relative overflow-hidden"
-            >
-              <div className="flex items-center gap-2 mb-2 text-base md:text-lg font-bold text-yellow-300"><FiSun /> Zonnepanelen</div>
-              <div className="text-base text-primary-100 mb-1">Status: <span className="text-green-400 font-bold">Actief</span></div>
-              <div className="text-base text-primary-100 mb-1">Opbrengst vandaag: <span className="font-bold text-yellow-200">18.2 kWh</span></div>
-              <div className="text-base text-primary-100">Efficiency: <span className="font-bold text-primary-400">94%</span></div>
-              <div className="absolute right-6 top-6 w-10 h-10 bg-yellow-300/10 rounded-full blur-2xl"></div>
-            </motion.div>
-            {/* Battery Storage */}
-            <motion.div
-              whileHover={{ scale: 1.04, boxShadow: '0 8px 32px 0 rgba(34,197,94,0.18)' }}
-              className="w-full h-full bg-white/20 backdrop-blur-2xl rounded-3xl shadow-2xl p-6 flex flex-col border border-white/20 relative overflow-hidden"
-            >
-              <div className="flex items-center gap-2 mb-2 text-base md:text-lg font-bold text-green-300"><FiBattery /> Batterij Opslag</div>
-              <div className="text-base text-primary-100 mb-1">76% geladen</div>
-              <div className="text-base text-primary-100 mb-1">7.6 / 10 kWh</div>
-              <div className="text-base text-primary-100">Geschatte tijd tot vol: <span className="font-bold text-green-200">2u 51m</span></div>
-              <div className="absolute left-6 bottom-6 w-10 h-10 bg-green-400/10 rounded-full blur-2xl"></div>
-            </motion.div>
-            {/* CO2 Savings */}
-            <motion.div
-              whileHover={{ scale: 1.04, boxShadow: '0 8px 32px 0 rgba(56,189,248,0.18)' }}
-              className="w-full h-full bg-white/20 backdrop-blur-2xl rounded-3xl shadow-2xl p-6 flex flex-col items-center justify-center border border-white/20 relative overflow-hidden"
-            >
-              <div className="font-bold text-base md:text-lg text-primary-100 mb-2">CO2 Besparing</div>
-              <div className="w-24 h-24 rounded-full bg-primary-50 flex items-center justify-center mb-2 text-primary-400 text-3xl font-bold shadow-inner">Donut Chart</div>
-              <div className="text-3xl font-extrabold text-primary-400 mb-1">2.4 kg</div>
-              <div className="text-primary-200 text-base">CO2 bespaard vandaag</div>
-              <div className="absolute right-6 top-6 w-10 h-10 bg-primary-400/10 rounded-full blur-2xl"></div>
-            </motion.div>
-          </motion.div>
-          {/* Recent Alerts */}
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, type: 'spring', delay: 0.3 }}
-            className="w-full"
-          >
-            <div className="bg-white/20 backdrop-blur-2xl rounded-3xl shadow-2xl p-10 border border-white/20">
-              <div className="font-bold text-xl text-yellow-200 mb-6 flex items-center gap-2"><FiAlertTriangle className="text-yellow-400" />Recente Alerts</div>
-              <div className="space-y-4">
-                {alerts.map((a, i) => (
-                  <motion.div
-                    key={i}
-                    whileHover={{ scale: 1.02 }}
-                    className="flex items-center gap-4 p-4 rounded-xl bg-white/10 hover:bg-primary-700/20 transition border border-white/10"
-                  >
-                    {a.icon}
-                    <div>
-                      <div className="font-bold text-primary-100 text-lg">{a.title}</div>
-                      <div className="text-xs text-primary-200">{a.desc}</div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-              <div className="mt-6 text-right">
-                <button className="text-primary-300 hover:underline text-base font-semibold">Alle alerts bekijken</button>
-              </div>
+              <FiSettings className="text-xl" /> Widgets
+            </button>
+          </div>
+          {showSettings && (
+            <div className="mb-6 p-4 bg-white/20 rounded-2xl shadow-lg flex flex-wrap gap-3">
+              {widgetRegistry.map(w => (
+                <button
+                  key={w.id}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition ${widgetState.hidden.includes(w.id) ? 'bg-primary-700/20 text-primary-200 border-primary-700' : 'bg-primary-400/10 text-primary-100 border-primary-400'}`}
+                  onClick={() => widgetState.hidden.includes(w.id) ? showWidget(w.id) : hideWidget(w.id)}
+                >
+                  {widgetState.hidden.includes(w.id) ? <FiEyeOff /> : <FiEye />} {w.name}
+                </button>
+              ))}
             </div>
-          </motion.div>
+          )}
+          <DragDropContext onDragEnd={onDragEnd}>
+            <Droppable droppableId="dashboard-widgets" direction="horizontal">
+              {(provided: DroppableProvided) => (
+                <div
+                  className="w-full grid gap-4 mb-10 justify-stretch"
+                  style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))' }}
+                  ref={provided.innerRef}
+                  {...provided.droppableProps}
+                >
+                  {visibleWidgets.map((id: string, idx: number) => {
+                    const widget = widgetRegistry.find(w => w.id === id);
+                    if (!widget) return null;
+                    const WidgetComp = widget.component;
+                    return (
+                      <Draggable key={id} draggableId={id} index={idx}>
+                        {(provided: DraggableProvided, snapshot: DraggableStateSnapshot) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                            className="relative"
+                          >
+                            <WidgetComp />
+                            <button
+                              className="absolute top-3 right-3 z-10 bg-white/30 hover:bg-red-500/80 text-primary-900 hover:text-white rounded-full p-1 shadow transition"
+                              onClick={() => hideWidget(id)}
+                              title="Verberg widget"
+                            >
+                              <FiEyeOff />
+                            </button>
+                          </div>
+                        )}
+                      </Draggable>
+                    );
+                  })}
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
+          </DragDropContext>
         </div>
       </main>
 
