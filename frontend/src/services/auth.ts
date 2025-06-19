@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { LoginCredentials, User } from '../types/auth';
+import type { LoginCredentials, User, RegisterCredentials } from '../types/auth';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
@@ -85,6 +85,23 @@ class AuthService {
 
   public getUser(): User | null {
     return this.user;
+  }
+
+  public async register(credentials: RegisterCredentials): Promise<void> {
+    console.log('AuthService: Attempting register', credentials);
+    try {
+      const response = await axios.post(`${API_URL}/users/`, credentials);
+      console.log('AuthService: Register response', response);
+    } catch (error: any) {
+      if (error.response) {
+        console.error('AuthService: Register failed with response:', error.response);
+      } else if (error.request) {
+        console.error('AuthService: Register failed, no response received:', error.request);
+      } else {
+        console.error('AuthService: Register failed, error:', error.message);
+      }
+      throw error;
+    }
   }
 }
 

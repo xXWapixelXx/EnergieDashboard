@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { FiMail, FiLock, FiEye, FiEyeOff, FiAlertCircle } from 'react-icons/fi';
 import authService from '../services/auth';
 import type { LoginCredentials } from '../types/auth';
+import { Link } from 'react-router-dom';
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -130,7 +131,7 @@ const Login = () => {
                 </div>
                 <input
                   id="password"
-                  type={showPassword ? 'text' : 'password'}
+                  type="password"
                   required
                   value={password}
                   onChange={e => setPassword(e.target.value)}
@@ -138,19 +139,6 @@ const Login = () => {
                   placeholder="••••••••"
                   disabled={isLoading}
                 />
-                <button
-                  type="button"
-                  className="absolute inset-y-0 right-0 pr-4 flex items-center"
-                  onClick={() => setShowPassword(!showPassword)}
-                  disabled={isLoading}
-                  tabIndex={-1}
-                >
-                  {showPassword ? (
-                    <FiEyeOff className="h-6 w-6 text-gray-400 hover:text-gray-600" />
-                  ) : (
-                    <FiEye className="h-6 w-6 text-gray-400 hover:text-gray-600" />
-                  )}
-                </button>
               </div>
             </motion.div>
             {/* Remember Me & Forgot Password */}
@@ -198,9 +186,9 @@ const Login = () => {
           >
             <p className="text-lg text-gray-400">
               Nog geen account?{' '}
-              <a href="#" className="font-semibold text-primary-400 hover:text-primary-300 transition-colors">
+              <Link to="/register" className="font-semibold text-primary-400 hover:text-primary-300 transition-colors">
                 Registreer hier
-              </a>
+              </Link>
             </p>
           </motion.div>
         </motion.div>
