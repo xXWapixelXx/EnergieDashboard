@@ -1,9 +1,16 @@
-import { FiHome, FiBarChart2, FiSettings, FiBell, FiAlertTriangle, FiUser, FiBattery, FiSun, FiTrendingUp, FiChevronRight, FiEye, FiEyeOff } from 'react-icons/fi';
+import { FiHome, FiBarChart2, FiSettings, FiAlertTriangle, FiUser, FiBattery, FiSun, FiTrendingUp, FiEye, FiEyeOff, FiInfo } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { widgetRegistry } from '../components/widgets';
 import React from 'react';
 import type { DropResult, DraggableProvided, DroppableProvided, DraggableStateSnapshot } from 'react-beautiful-dnd';
+import authService from '../services/auth';
+
+// Import widgets directly
+import PowerHistoryChartWidget from '../components/widgets/PowerHistoryChartWidget';
+import LiveUsageWidget from '../components/widgets/LiveUsageWidget';
+import BatteryWidget from '../components/widgets/BatteryWidget';
+import TemperatureWidget from '../components/widgets/TemperatureWidget';
 
 const navItems = [
   { icon: <FiHome />, label: 'Dashboard', active: true },
@@ -46,6 +53,8 @@ function getInitialWidgetState() {
 const Dashboard = () => {
   const [widgetState, setWidgetState] = React.useState(getInitialWidgetState());
   const [showSettings, setShowSettings] = React.useState(false);
+  // Get logged-in user
+  const user = authService.getUser();
 
   React.useEffect(() => {
     localStorage.setItem(WIDGETS_STORAGE_KEY, JSON.stringify(widgetState));
@@ -71,7 +80,7 @@ const Dashboard = () => {
 
   return (
     <div className="relative min-h-screen w-screen overflow-x-hidden bg-gradient-to-br from-primary-900 via-purple-900 to-gray-900 flex items-stretch">
-      {/* Animated, glassy floating sidebar */}
+      {/* Sidebar */}
       <motion.aside
         initial={{ x: -80, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
@@ -104,19 +113,6 @@ const Dashboard = () => {
         </nav>
       </motion.aside>
 
-      {/* Animated background particles */}
-      <div className="absolute inset-0 -z-10 pointer-events-none">
-        <svg className="absolute left-1/4 top-1/4 w-32 h-32 animate-pulse" viewBox="0 0 100 100" fill="none">
-          <circle cx="50" cy="50" r="40" fill="#a21caf" opacity="0.08" />
-        </svg>
-        <svg className="absolute right-1/3 top-1/2 w-24 h-24 animate-pulse delay-1000" viewBox="0 0 100 100" fill="none">
-          <circle cx="50" cy="50" r="30" fill="#38bdf8" opacity="0.07" />
-        </svg>
-        <svg className="absolute left-1/2 bottom-1/4 w-20 h-20 animate-pulse delay-2000" viewBox="0 0 100 100" fill="none">
-          <circle cx="50" cy="50" r="20" fill="#f472b6" opacity="0.09" />
-        </svg>
-      </div>
-
       {/* Main content grid */}
       <main className="flex-1 flex flex-col py-12 ml-32">
         <div className="px-2 sm:px-4 md:px-8 w-full">
@@ -146,8 +142,8 @@ const Dashboard = () => {
             <Droppable droppableId="dashboard-widgets" direction="horizontal">
               {(provided: DroppableProvided) => (
                 <div
-                  className="w-full grid gap-4 mb-10 justify-stretch"
-                  style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))' }}
+                  className="w-full grid gap-6 mb-10"
+                  style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))' }}
                   ref={provided.innerRef}
                   {...provided.droppableProps}
                 >
@@ -155,6 +151,8 @@ const Dashboard = () => {
                     const widget = widgetRegistry.find(w => w.id === id);
                     if (!widget) return null;
                     const WidgetComp = widget.component;
+                    // Make the PowerHistoryChartWidget bigger
+                    const isChart = id === 'power-history-chart';
                     return (
                       <Draggable key={id} draggableId={id} index={idx}>
                         {(provided: DraggableProvided, snapshot: DraggableStateSnapshot) => (
@@ -162,16 +160,16 @@ const Dashboard = () => {
                             ref={provided.innerRef}
                             {...provided.draggableProps}
                             {...provided.dragHandleProps}
-                            className="relative"
+                            className={isChart ? 'col-span-2 row-span-2' : ''}
+                            style={isChart ? { minHeight: 400, gridColumn: 'span 2', ...provided.draggableProps.style } : provided.draggableProps.style}
                           >
+                            {/* Info icon for chart */}
+                            {isChart && (
+                              <div className="absolute top-4 right-4 z-10 flex items-center gap-2 text-primary-200">
+                                <FiInfo title="De grafiek toont het gemiddelde verbruik per dag. De live waarde is het actuele verbruik op dit moment." />
+                              </div>
+                            )}
                             <WidgetComp />
-                            <button
-                              className="absolute top-3 right-3 z-10 bg-white/30 hover:bg-red-500/80 text-primary-900 hover:text-white rounded-full p-1 shadow transition"
-                              onClick={() => hideWidget(id)}
-                              title="Verberg widget"
-                            >
-                              <FiEyeOff />
-                            </button>
                           </div>
                         )}
                       </Draggable>
@@ -182,6 +180,21 @@ const Dashboard = () => {
               )}
             </Droppable>
           </DragDropContext>
+          {/* Alerts section at the bottom */}
+          <div className="w-full bg-white/10 rounded-2xl shadow-lg p-6 mt-8">
+            <div className="font-bold text-lg text-primary-100 mb-4">Recente Alerts</div>
+            <div className="flex flex-col gap-3">
+              {alerts.map((alert, idx) => (
+                <div key={idx} className="flex items-center gap-4 bg-white/10 rounded-xl px-4 py-3 text-primary-100">
+                  {alert.icon}
+                  <div className="flex-1">
+                    <div className="font-semibold">{alert.title}</div>
+                    <div className="text-primary-200 text-sm">{alert.desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </main>
 
@@ -192,8 +205,12 @@ const Dashboard = () => {
         transition={{ delay: 1.1, type: 'spring' }}
         className="fixed top-8 right-8 z-40 bg-white/20 backdrop-blur-2xl border border-white/30 shadow-2xl rounded-full p-2 flex items-center gap-3 hover:bg-primary-600/80 hover:text-white transition-all"
       >
-        <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="User" className="w-10 h-10 rounded-full border-2 border-primary-400" />
-        <span className="font-bold text-primary-100 pr-4 pl-2 hidden md:inline">Jan Janssen</span>
+        <span className="w-10 h-10 rounded-full border-2 border-primary-400 bg-primary-800 flex items-center justify-center">
+          <FiUser className="text-2xl text-primary-200" />
+        </span>
+        <span className="font-bold text-primary-100 pr-4 pl-2 hidden md:inline">
+          {user?.email || 'Gebruiker'}
+        </span>
       </motion.button>
     </div>
   );
