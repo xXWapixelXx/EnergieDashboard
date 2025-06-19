@@ -23,7 +23,7 @@ const Dashboard = () => {
         initial={{ x: -80, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         transition={{ type: 'spring', stiffness: 80, damping: 18 }}
-        className="fixed top-0 left-0 z-30 h-screen flex flex-col gap-6 bg-white/10 backdrop-blur-2xl border border-white/20 shadow-2xl rounded-3xl px-6 py-8 w-24 items-center"
+        className="fixed top-0 left-0 z-30 h-screen flex flex-col gap-4 bg-white/10 backdrop-blur-2xl border border-white/20 shadow-2xl rounded-2xl px-2 py-4 w-16 items-center"
         style={{ boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)' }}
       >
         <motion.div
@@ -62,20 +62,20 @@ const Dashboard = () => {
 
       {/* Main content grid */}
       <main className="flex-1 flex flex-col py-12 ml-32">
-        <div className="px-4 sm:px-8 w-full">
+        <div className="px-2 sm:px-4 md:px-8 w-full">
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, type: 'spring' }}
-            className="w-full grid gap-8 mb-10 justify-stretch"
-            style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))' }}
+            className="w-full grid gap-4 mb-10 justify-stretch"
+            style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}
           >
             {/* Live Energy Usage */}
             <motion.div
               whileHover={{ scale: 1.02, boxShadow: '0 8px 32px 0 rgba(56,189,248,0.18)' }}
-              className="w-full h-full bg-white/20 backdrop-blur-2xl rounded-3xl shadow-2xl p-10 flex flex-col min-h-[320px] border border-white/20 relative overflow-hidden"
+              className="w-full h-full bg-white/20 backdrop-blur-2xl rounded-3xl shadow-2xl p-6 flex flex-col min-h-[240px] border border-white/20 relative overflow-hidden"
             >
-              <div className="font-bold text-2xl text-primary-100 mb-2 flex items-center gap-2">
+              <div className="font-bold text-xl md:text-2xl text-primary-100 mb-2 flex items-center gap-2">
                 <FiTrendingUp className="text-primary-400" /> Live Energieverbruik
               </div>
               <div className="flex-1 flex items-center justify-center text-primary-200 text-lg">Line Chart - Energieverbruik per uur</div>
@@ -84,9 +84,9 @@ const Dashboard = () => {
             {/* AI Prediction */}
             <motion.div
               whileHover={{ scale: 1.04, boxShadow: '0 8px 32px 0 rgba(162,28,175,0.18)' }}
-              className="bg-white/20 backdrop-blur-2xl rounded-3xl shadow-2xl p-10 flex flex-col items-center justify-center border border-white/20 relative overflow-hidden"
+              className="w-full h-full bg-white/20 backdrop-blur-2xl rounded-3xl shadow-2xl p-6 flex flex-col items-center justify-center border border-white/20 relative overflow-hidden"
             >
-              <div className="font-bold text-xl text-primary-100 mb-2 flex items-center gap-2">
+              <div className="font-bold text-lg md:text-xl text-primary-100 mb-2 flex items-center gap-2">
                 <FiBell className="text-pink-400" /> AI Voorspelling
               </div>
               <div className="text-4xl font-extrabold text-primary-400 mb-1 drop-shadow">24.8 kWh</div>
@@ -99,15 +99,15 @@ const Dashboard = () => {
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, type: 'spring', delay: 0.2 }}
-            className="w-full grid gap-8 mb-10 justify-stretch"
-            style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))' }}
+            className="w-full grid gap-4 mb-10 justify-stretch"
+            style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}
           >
             {/* Solar Panel */}
             <motion.div
               whileHover={{ scale: 1.04, boxShadow: '0 8px 32px 0 rgba(253,224,71,0.18)' }}
-              className="w-full h-full bg-white/20 backdrop-blur-2xl rounded-3xl shadow-2xl p-10 flex flex-col border border-white/20 relative overflow-hidden"
+              className="w-full h-full bg-white/20 backdrop-blur-2xl rounded-3xl shadow-2xl p-6 flex flex-col border border-white/20 relative overflow-hidden"
             >
-              <div className="flex items-center gap-2 mb-2 text-lg font-bold text-yellow-300"><FiSun /> Zonnepanelen</div>
+              <div className="flex items-center gap-2 mb-2 text-base md:text-lg font-bold text-yellow-300"><FiSun /> Zonnepanelen</div>
               <div className="text-base text-primary-100 mb-1">Status: <span className="text-green-400 font-bold">Actief</span></div>
               <div className="text-base text-primary-100 mb-1">Opbrengst vandaag: <span className="font-bold text-yellow-200">18.2 kWh</span></div>
               <div className="text-base text-primary-100">Efficiency: <span className="font-bold text-primary-400">94%</span></div>
@@ -116,9 +116,9 @@ const Dashboard = () => {
             {/* Battery Storage */}
             <motion.div
               whileHover={{ scale: 1.04, boxShadow: '0 8px 32px 0 rgba(34,197,94,0.18)' }}
-              className="w-full h-full bg-white/20 backdrop-blur-2xl rounded-3xl shadow-2xl p-10 flex flex-col border border-white/20 relative overflow-hidden"
+              className="w-full h-full bg-white/20 backdrop-blur-2xl rounded-3xl shadow-2xl p-6 flex flex-col border border-white/20 relative overflow-hidden"
             >
-              <div className="flex items-center gap-2 mb-2 text-lg font-bold text-green-300"><FiBattery /> Batterij Opslag</div>
+              <div className="flex items-center gap-2 mb-2 text-base md:text-lg font-bold text-green-300"><FiBattery /> Batterij Opslag</div>
               <div className="text-base text-primary-100 mb-1">76% geladen</div>
               <div className="text-base text-primary-100 mb-1">7.6 / 10 kWh</div>
               <div className="text-base text-primary-100">Geschatte tijd tot vol: <span className="font-bold text-green-200">2u 51m</span></div>
@@ -127,9 +127,9 @@ const Dashboard = () => {
             {/* CO2 Savings */}
             <motion.div
               whileHover={{ scale: 1.04, boxShadow: '0 8px 32px 0 rgba(56,189,248,0.18)' }}
-              className="w-full h-full bg-white/20 backdrop-blur-2xl rounded-3xl shadow-2xl p-10 flex flex-col items-center justify-center border border-white/20 relative overflow-hidden"
+              className="w-full h-full bg-white/20 backdrop-blur-2xl rounded-3xl shadow-2xl p-6 flex flex-col items-center justify-center border border-white/20 relative overflow-hidden"
             >
-              <div className="font-bold text-lg text-primary-100 mb-2">CO2 Besparing</div>
+              <div className="font-bold text-base md:text-lg text-primary-100 mb-2">CO2 Besparing</div>
               <div className="w-24 h-24 rounded-full bg-primary-50 flex items-center justify-center mb-2 text-primary-400 text-3xl font-bold shadow-inner">Donut Chart</div>
               <div className="text-3xl font-extrabold text-primary-400 mb-1">2.4 kg</div>
               <div className="text-primary-200 text-base">CO2 bespaard vandaag</div>
