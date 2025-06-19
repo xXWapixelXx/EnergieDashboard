@@ -12,6 +12,7 @@ import PowerHistoryChartWidget from '../components/widgets/PowerHistoryChartWidg
 import LiveUsageWidget from '../components/widgets/LiveUsageWidget';
 import BatteryWidget from '../components/widgets/BatteryWidget';
 import TemperatureWidget from '../components/widgets/TemperatureWidget';
+import AIAlertsWidget from '../components/widgets/AIAlertsWidget';
 
 const navItems = [
   { icon: <FiHome />, label: 'Dashboard', active: true },
@@ -19,12 +20,6 @@ const navItems = [
   { icon: <FiSettings />, label: 'Instellingen' },
   { icon: <FiAlertTriangle />, label: 'Alerts', hasAlert: true },
   { icon: <FiUser />, label: 'Admin' },
-];
-
-const alerts = [
-  { icon: <FiAlertTriangle className="text-yellow-500" />, title: 'Hoog energieverbruik gedetecteerd', desc: 'Verbruik 15% hoger dan gemiddeld · 10:34' },
-  { icon: <FiTrendingUp className="text-blue-500" />, title: 'Zonnepaneel efficiency gedaald', desc: 'Paneel 3 presteert onder verwachting · 09:15' },
-  { icon: <FiBattery className="text-green-500" />, title: 'Batterij volledig opgeladen', desc: 'Automatisch overgeschakeld naar netvoeding · 08:45' },
 ];
 
 const WIDGETS_STORAGE_KEY = 'dashboard_widgets_v1';
@@ -198,18 +193,10 @@ const Dashboard = () => {
           </DragDropContext>
           {/* Alerts section at the bottom */}
           <div className="w-full bg-white/10 rounded-2xl shadow-lg p-6 mt-8">
-            <div className="font-bold text-lg text-primary-100 mb-4">Recente Alerts</div>
-            <div className="flex flex-col gap-3">
-              {alerts.map((alert, idx) => (
-                <div key={idx} className="flex items-center gap-4 bg-white/10 rounded-xl px-4 py-3 text-primary-100">
-                  {alert.icon}
-                  <div className="flex-1">
-                    <div className="font-semibold">{alert.title}</div>
-                    <div className="text-primary-200 text-sm">{alert.desc}</div>
-                  </div>
-                </div>
-              ))}
+            <div className="font-bold text-lg text-primary-100 mb-4 flex items-center gap-2">
+              <FiAlertTriangle className="text-yellow-300" /> Alerts
             </div>
+            <AIAlertsWidget />
           </div>
         </div>
       </main>
@@ -219,7 +206,7 @@ const Dashboard = () => {
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 1.1, type: 'spring' }}
-        className="fixed top-8 right-8 z-40 bg-white/20 backdrop-blur-2xl border border-white/30 shadow-2xl rounded-full p-2 flex items-center gap-3 hover:bg-primary-600/80 hover:text-white transition-all"
+        className="fixed top-8 right-8 z-40 bg-white/20 backdrop-blur-2xl border border-white/30 shadow-2xl rounded-full p-2 flex items-center gap-3 hover:bg-primary-600/80 hover:text-white transition-all opacity-50 hover:opacity-100 transition-opacity"
       >
         <span className="w-10 h-10 rounded-full border-2 border-primary-400 bg-primary-800 flex items-center justify-center">
           <FiUser className="text-2xl text-primary-200" />
