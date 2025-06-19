@@ -56,13 +56,13 @@ const Register = () => {
   };
 
   return (
-    <div className="w-full min-h-screen flex items-center justify-center relative overflow-hidden">
+    <div className="min-h-screen w-screen flex items-center justify-center bg-gradient-to-br from-primary-900 via-purple-900 to-gray-900 relative overflow-hidden">
       {/* Animated Sparkle/particle overlay */}
       <svg className="sparkle left-1/4 top-1/4 w-8 h-8" style={{animationDelay: '0s'}} viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="2" fill="#fff" opacity="0.8"/><circle cx="12" cy="12" r="6" stroke="#38bdf8" strokeWidth="1.5" opacity="0.5"/></svg>
       <svg className="sparkle right-1/3 top-1/2 w-6 h-6" style={{animationDelay: '2s'}} viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="1.5" fill="#fff" opacity="0.7"/><circle cx="12" cy="12" r="4" stroke="#a21caf" strokeWidth="1.2" opacity="0.4"/></svg>
       <svg className="sparkle left-1/2 bottom-1/4 w-5 h-5" style={{animationDelay: '4s'}} viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="1" fill="#fff" opacity="0.6"/><circle cx="12" cy="12" r="3" stroke="#f472b6" strokeWidth="1" opacity="0.3"/></svg>
 
-      <div className="w-full max-w-lg mx-auto relative z-10 flex flex-col items-center">
+      <div className="w-full max-w-md mx-auto relative z-10 flex flex-col items-center px-4 sm:px-6 md:px-8">
         {/* Logo and Title */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -101,7 +101,7 @@ const Register = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-12 border border-white/20 w-full"
+          className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-8 sm:p-10 md:p-12 border border-white/20 w-full max-w-md"
         >
           {error && (
             <motion.div
@@ -113,7 +113,7 @@ const Register = () => {
               <span>{error}</span>
             </motion.div>
           )}
-          <form onSubmit={handleSubmit} className="space-y-8">
+          <form onSubmit={handleSubmit} className="space-y-4">
             {/* Username Field */}
             <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 }}>
               <label htmlFor="username" className="block text-lg font-semibold text-gray-200 mb-2">Gebruikersnaam</label>
