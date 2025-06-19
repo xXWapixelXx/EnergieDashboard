@@ -4,6 +4,7 @@ import BatteryWidget from './BatteryWidget';
 import TemperatureWidget from './TemperatureWidget';
 import HumidityHistoryWidget from './HumidityHistoryWidget';
 import PowerHistoryChartWidget from './PowerHistoryChartWidget';
+import AIPredictionWidget from './AIInsightsWidget';
 
 export const widgetRegistry = [
   {
@@ -35,5 +36,10 @@ export const widgetRegistry = [
     id: 'power-history-chart',
     name: 'Energieverbruik Grafiek',
     component: PowerHistoryChartWidget,
+  },
+  {
+    id: 'ai-prediction',
+    name: 'AI Voorspelling',
+    component: AIPredictionWidget,
   },
 ]; 
