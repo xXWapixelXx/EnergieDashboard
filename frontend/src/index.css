@@ -146,3 +146,12 @@ button:focus-visible {
   0% { box-shadow: 0 0 0 0 #38bdf8; }
   100% { box-shadow: 0 0 0 16px rgba(56,189,248,0); }
 }
+
+/* Hide scrollbars for all browsers but allow scrolling */
+body, html {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;     /* Firefox */
+}
+body::-webkit-scrollbar, html::-webkit-scrollbar {
+  display: none;
+}

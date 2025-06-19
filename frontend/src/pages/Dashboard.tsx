@@ -1,10 +1,11 @@
-import { FiHome, FiBarChart2, FiSettings, FiAlertTriangle, FiUser, FiBattery, FiSun, FiTrendingUp, FiEye, FiEyeOff, FiInfo } from 'react-icons/fi';
+import { FiHome, FiBarChart2, FiSettings, FiAlertTriangle, FiUser, FiBattery, FiSun, FiTrendingUp, FiEye, FiEyeOff, FiInfo, FiLogOut } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { widgetRegistry } from '../components/widgets';
 import React from 'react';
 import type { DropResult, DraggableProvided, DroppableProvided, DraggableStateSnapshot } from 'react-beautiful-dnd';
 import authService from '../services/auth';
+import { useNavigate } from 'react-router-dom';
 
 // Import widgets directly
 import PowerHistoryChartWidget from '../components/widgets/PowerHistoryChartWidget';
@@ -55,6 +56,7 @@ const Dashboard = () => {
   const [showSettings, setShowSettings] = React.useState(false);
   // Get logged-in user
   const user = authService.getUser();
+  const navigate = useNavigate();
 
   React.useEffect(() => {
     localStorage.setItem(WIDGETS_STORAGE_KEY, JSON.stringify(widgetState));
@@ -77,6 +79,11 @@ const Dashboard = () => {
   };
 
   const visibleWidgets = widgetState.order.filter(id => !widgetState.hidden.includes(id));
+
+  const handleLogout = () => {
+    authService.logout();
+    navigate('/login');
+  };
 
   return (
     <div className="relative min-h-screen w-screen overflow-x-hidden bg-gradient-to-br from-primary-900 via-purple-900 to-gray-900 flex items-stretch">
@@ -110,6 +117,15 @@ const Dashboard = () => {
               )}
             </motion.button>
           ))}
+          {/* Logout button under Admin */}
+          <motion.button
+            whileHover={{ scale: 1.15 }}
+            className="relative flex flex-col items-center justify-center w-16 h-16 rounded-2xl text-3xl transition-all duration-150 text-primary-200 hover:bg-red-600/80 hover:text-white mt-2"
+            onClick={handleLogout}
+            title="Uitloggen"
+          >
+            <FiLogOut />
+          </motion.button>
         </nav>
       </motion.aside>
 
