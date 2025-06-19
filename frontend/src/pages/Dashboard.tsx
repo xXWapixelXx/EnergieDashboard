@@ -5,7 +5,7 @@ const navItems = [
   { icon: <FiHome />, label: 'Dashboard', active: true },
   { icon: <FiBarChart2 />, label: 'Historiek' },
   { icon: <FiSettings />, label: 'Instellingen' },
-  { icon: <FiAlertTriangle />, label: 'Alerts' },
+  { icon: <FiAlertTriangle />, label: 'Alerts', hasAlert: true },
   { icon: <FiUser />, label: 'Admin' },
 ];
 
@@ -23,28 +23,32 @@ const Dashboard = () => {
         initial={{ x: -80, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         transition={{ type: 'spring', stiffness: 80, damping: 18 }}
-        className="fixed top-0 left-0 z-30 h-screen flex flex-col gap-4 bg-white/10 backdrop-blur-2xl border border-white/20 shadow-2xl rounded-2xl px-2 py-4 w-16 items-center"
+        className="fixed top-8 left-8 z-30 flex flex-col gap-4 bg-white/10 backdrop-blur-2xl border border-white/20 shadow-2xl rounded-3xl px-2 py-10 w-24 items-center min-h-[600px]"
         style={{ boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)' }}
       >
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ type: 'spring', stiffness: 200, damping: 18, delay: 0.2 }}
-          className="w-14 h-14 rounded-2xl gradient-bg flex items-center justify-center shadow-xl mb-4"
+          className="w-14 h-14 rounded-2xl gradient-bg flex items-center justify-center shadow-xl mb-8"
         >
           <span className="text-3xl" role="img" aria-label="lightning">⚡</span>
         </motion.div>
-        {navItems.map((item, i) => (
-          <motion.button
-            key={item.label}
-            whileHover={{ scale: 1.15 }}
-            className={`flex flex-col items-center gap-1 w-12 h-12 rounded-xl text-xl transition-all ${item.active ? 'bg-primary-600/80 text-white shadow-lg' : 'text-primary-200 hover:bg-primary-700/30 hover:text-white'}`}
-          >
-            {item.icon}
-            <span className="text-[10px] font-bold tracking-wide uppercase mt-1">{item.label[0]}</span>
-            {item.label === 'Alerts' && <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"></span>}
-          </motion.button>
-        ))}
+        <nav className="flex flex-col gap-4 w-full items-center">
+          {navItems.map((item, i) => (
+            <motion.button
+              key={item.label}
+              whileHover={{ scale: 1.15 }}
+              className={`relative flex flex-col items-center justify-center w-16 h-16 rounded-2xl text-3xl transition-all duration-150
+                ${item.active ? 'bg-primary-600/80 text-white shadow-lg' : 'text-primary-200 hover:bg-primary-700/30 hover:text-white'}`}
+            >
+              {item.icon}
+              {item.hasAlert && (
+                <span className="absolute top-3 right-3 w-3 h-3 bg-red-500 rounded-full border-2 border-white/40"></span>
+              )}
+            </motion.button>
+          ))}
+        </nav>
       </motion.aside>
 
       {/* Animated background particles */}
