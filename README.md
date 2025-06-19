@@ -114,4 +114,57 @@ The frontend uses Vue.js 3 with the Composition API:
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details. 
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+# EnergieDashboard Data Fields & Widget Data Flow
+
+## Available Data Fields (from CSV)
+
+- Tijdstip (timestamp)
+- Zonnepaneelspanning (V) (solar_voltage)
+- Zonnepaneelstroom (A) (solar_current)
+- Waterstofproductie (L/u) (hydrogen_production)
+- Stroomverbruik woning (kW) (power_consumption)
+- Waterstofverbruik auto (L/u) (hydrogen_consumption)
+- Buitentemperatuur (°C) (outside_temperature)
+- Binnentemperatuur (°C) (inside_temperature)
+- Luchtdruk (hPa) (air_pressure)
+- Luchtvochtigheid (%) (humidity)
+- Accuniveau (%) (battery_level)
+- CO2-concentratie binnen (ppm) (co2_level)
+- Waterstofopslag woning (%) (hydrogen_storage_house)
+- Waterstofopslag auto (%) (hydrogen_storage_car)
+
+## How Data Flows to Widgets
+
+### 1. Live Energieverbruik (Live Energy Usage)
+- **Data Source:** `/api/measurements/latest` (backend endpoint)
+- **How:**
+  - Backend reads the latest rows from the database (imported from the CSV)
+  - Widget displays the most recent `power_consumption` and its `timestamp`
+  - The backend gets this by ordering by `timestamp DESC` and taking the first row
+
+### 2. Historiek (History)
+- **Data Source:** `/api/measurements/daily` (backend endpoint)
+- **How:**
+  - Backend aggregates daily averages from the measurements table (imported from the CSV)
+  - Widget displays `avg_power_consumption` for each day (with the date)
+  - The backend groups by date and calculates the average for each field
+
+## Adding More Data Fields to Widgets
+- You can add widgets for any of the above fields (e.g., solar voltage, battery level, temperature, etc.)
+- For live widgets, use the latest value from `/api/measurements/latest`
+- For historical/average widgets, use the corresponding `avg_*` field from `/api/measurements/daily`
+- Example: To show average humidity per day, use `avg_humidity` from the daily endpoint
+
+## CSV Import
+- The backend imports data from `backend/data/energy_consumption.csv`
+- Column names are mapped to English field names in the database
+- Data is processed and stored in the `measurements` table
+- Daily aggregations are calculated and stored in `daily_aggregations`
+
+---
+
+**For developers:**
+- To add a new widget, create a new component in `frontend/src/components/widgets/` and register it in `index.tsx`
+- Use the appropriate backend endpoint and field for your data 

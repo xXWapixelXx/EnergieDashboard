@@ -1,5 +1,9 @@
 import LiveUsageWidget from './LiveUsageWidget';
 import HistoryWidget from './HistoryWidget';
+import BatteryWidget from './BatteryWidget';
+import TemperatureWidget from './TemperatureWidget';
+import HumidityHistoryWidget from './HumidityHistoryWidget';
+import PowerHistoryChartWidget from './PowerHistoryChartWidget';
 
 export const widgetRegistry = [
   {
@@ -11,5 +15,25 @@ export const widgetRegistry = [
     id: 'history',
     name: 'Historiek',
     component: HistoryWidget,
+  },
+  {
+    id: 'battery',
+    name: 'Batterij Niveau',
+    component: BatteryWidget,
+  },
+  {
+    id: 'temperature',
+    name: 'Temperatuur',
+    component: TemperatureWidget,
+  },
+  {
+    id: 'humidity-history',
+    name: 'Luchtvochtigheid Historiek',
+    component: HumidityHistoryWidget,
+  },
+  {
+    id: 'power-history-chart',
+    name: 'Energieverbruik Grafiek',
+    component: PowerHistoryChartWidget,
   },
 ]; 

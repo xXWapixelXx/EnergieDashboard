@@ -1,0 +1,54 @@
+import React, { useEffect, useState } from 'react';
+import { FiBattery } from 'react-icons/fi';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
+const BatteryWidget = () => {
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLoading(true);
+    fetch(`${API_URL}/api/measurements/latest`)
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to fetch');
+        return res.json();
+      })
+      .then((json) => {
+        if (Array.isArray(json) && json.length > 0) {
+          setData(json[0]);
+        } else {
+          setData(null);
+        }
+        setError(null);
+      })
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const level = data ? parseFloat(data.battery_level) : 0;
+  let color = 'bg-green-400';
+  if (level < 30) color = 'bg-red-500';
+  else if (level < 60) color = 'bg-yellow-400';
+
+  return (
+    <div className="w-full h-full bg-white/20 backdrop-blur-2xl rounded-3xl shadow-2xl p-6 flex flex-col min-h-[180px] border border-white/20 relative overflow-hidden">
+      <div className="font-bold text-xl text-primary-100 mb-2 flex items-center gap-2">
+        <FiBattery className="text-green-300" /> Batterij Niveau
+      </div>
+      {loading && <div className="text-primary-200">Laden...</div>}
+      {error && <div className="text-red-400">Fout: {error}</div>}
+      {data && (
+        <div className="flex-1 flex flex-col items-center justify-center w-full">
+          <div className="text-4xl font-extrabold text-green-300 mb-2">{level.toFixed(1)}%</div>
+          <div className="w-full h-6 bg-primary-900/40 rounded-xl overflow-hidden shadow-inner">
+            <div className={`h-full ${color} transition-all`} style={{ width: `${level}%` }}></div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default BatteryWidget; 

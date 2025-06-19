@@ -23,15 +23,23 @@ const WIDGETS_STORAGE_KEY = 'dashboard_widgets_v1';
 
 function getInitialWidgetState() {
   const saved = localStorage.getItem(WIDGETS_STORAGE_KEY);
+  let order = widgetRegistry.map(w => w.id);
+  let hidden: string[] = [];
   if (saved) {
     try {
-      return JSON.parse(saved);
+      const parsed = JSON.parse(saved);
+      // Merge: keep existing order, append any new widgets at the end
+      const savedOrder: string[] = parsed.order || [];
+      order = [
+        ...savedOrder.filter(id => order.includes(id)),
+        ...order.filter(id => !savedOrder.includes(id)),
+      ];
+      hidden = parsed.hidden || [];
     } catch {}
   }
-  // Default: all widgets visible, default order
   return {
-    order: widgetRegistry.map(w => w.id),
-    hidden: [],
+    order,
+    hidden,
   };
 }
 
