@@ -4,6 +4,7 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianG
 import { useNavigate, useLocation } from 'react-router-dom';
 import authService from '../services/auth';
 import { motion } from 'framer-motion';
+import Layout from '../components/Layout';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
@@ -203,195 +204,123 @@ const Historiek = () => {
   };
 
   return (
-    <div className="relative min-h-screen w-screen overflow-x-hidden bg-gradient-to-br from-primary-900 via-purple-900 to-gray-900 flex items-stretch">
-      {/* Sidebar */}
-      <motion.aside
-        initial={{ x: -80, opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
-        transition={{ type: 'spring', stiffness: 80, damping: 18 }}
-        className="fixed top-8 left-8 z-30 flex flex-col gap-4 bg-white/10 backdrop-blur-2xl border border-white/20 shadow-2xl rounded-3xl px-2 py-10 w-24 items-center min-h-[600px]"
-        style={{ boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)' }}
-      >
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: 'spring', stiffness: 200, damping: 18, delay: 0.2 }}
-          className="w-14 h-14 rounded-2xl gradient-bg flex items-center justify-center shadow-xl mb-8"
-        >
-          <span className="text-3xl" role="img" aria-label="chart">📊</span>
-        </motion.div>
-        <nav className="flex flex-col gap-4 w-full items-center">
-          {navItems.map((item, i) => (
-            <motion.button
-              key={item.label}
-              whileHover={{ scale: 1.15 }}
-              onClick={() => navigate(item.path)}
-              className={`relative flex flex-col items-center justify-center w-16 h-16 rounded-2xl text-3xl transition-all duration-150
-                ${location.pathname === item.path ? 'bg-primary-600/80 text-white shadow-lg' : 'text-primary-200 hover:bg-primary-700/30 hover:text-white'}`}
-              title={item.label}
-            >
-              {item.icon}
-              {item.hasAlert && (
-                <span className="absolute top-3 right-3 w-3 h-3 bg-red-500 rounded-full border-2 border-white/40"></span>
-              )}
-            </motion.button>
-          ))}
-          {/* Only show Admin button if user is admin or superadmin */}
-          {(user?.role === 'admin' || user?.role === 'superadmin') && (
-            <motion.button
-              whileHover={{ scale: 1.15 }}
-              onClick={() => navigate('/admin')}
-              className={`relative flex flex-col items-center justify-center w-16 h-16 rounded-2xl text-3xl transition-all duration-150
-                ${location.pathname === '/admin' ? 'bg-primary-600/80 text-white shadow-lg' : 'text-primary-200 hover:bg-primary-700/30 hover:text-white'}`}
-              title="Admin"
-            >
-              <FiUser />
-            </motion.button>
-          )}
-          {/* Always show logout button at the bottom */}
-          <motion.button
-            whileHover={{ scale: 1.15 }}
-            className="relative flex flex-col items-center justify-center w-16 h-16 rounded-2xl text-3xl transition-all duration-150 text-primary-200 hover:bg-red-600/80 hover:text-white mt-2"
-            onClick={handleLogout}
-            title="Uitloggen"
-          >
-            <FiLogOut />
-          </motion.button>
-        </nav>
-      </motion.aside>
-      {/* Main content */}
-      <main className="flex-1 flex flex-col py-12 ml-32">
-        <div className="px-2 sm:px-4 md:px-8 w-full">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-8">
-            <h1 className="text-3xl font-bold text-white/90">Historiek</h1>
-            <button onClick={handleExport} className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-white/30 backdrop-blur-2xl border border-white/30 shadow-2xl text-primary-900 hover:bg-primary-600/80 hover:text-white transition-all text-lg font-semibold">
-              <FiDownload className="text-xl" /> Export Data
-            </button>
+    <Layout>
+      <div className="px-2 sm:px-4 md:px-8 w-full">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-3xl font-bold text-white/90">Historiek</h1>
+          <button onClick={handleExport} className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-white/30 backdrop-blur-2xl border border-white/30 shadow-2xl text-primary-900 hover:bg-primary-600/80 hover:text-white transition-all text-lg font-semibold">
+            <FiDownload className="text-xl" /> Export Data
+          </button>
+        </div>
+        {/* Filters */}
+        <div className="mb-8 p-6 bg-white/20 rounded-2xl shadow-lg flex flex-wrap gap-6 items-end border border-white/20 max-w-4xl backdrop-blur-2xl">
+          <div className="flex flex-col gap-2 min-w-[180px]">
+            <label className="text-primary-100 font-semibold">Periode</label>
+            <select className="glass-input px-4 py-2 rounded-xl bg-white/60 border border-primary-200 focus:ring-2 focus:ring-primary-400 transition" value={period} onChange={e => setPeriod(e.target.value as PeriodType)}>
+              {periods.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
+            </select>
           </div>
-          {/* Filters */}
-          <div className="mb-8 p-6 bg-white/20 rounded-2xl shadow-lg flex flex-wrap gap-6 items-end border border-white/20 max-w-4xl backdrop-blur-2xl">
-            <div className="flex flex-col gap-2 min-w-[180px]">
-              <label className="text-primary-100 font-semibold">Periode</label>
-              <select className="glass-input px-4 py-2 rounded-xl bg-white/60 border border-primary-200 focus:ring-2 focus:ring-primary-400 transition" value={period} onChange={e => setPeriod(e.target.value as PeriodType)}>
-                {periods.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
-              </select>
-            </div>
-            <div className="flex flex-col gap-2 min-w-[180px]">
-              <label className="text-primary-100 font-semibold">Van datum</label>
-              <input
-                type="date"
-                className="glass-input px-4 py-2 rounded-xl bg-white/60 border border-primary-200 focus:ring-2 focus:ring-primary-400 transition"
-                value={fromDate}
-                onChange={e => setFromDate(e.target.value)}
-                placeholder="dd-mm-jjjj"
-              />
-            </div>
-            <div className="flex flex-col gap-2 min-w-[180px]">
-              <label className="text-primary-100 font-semibold">Tot datum</label>
-              <input
-                type="date"
-                className="glass-input px-4 py-2 rounded-xl bg-white/60 border border-primary-200 focus:ring-2 focus:ring-primary-400 transition"
-                value={toDate}
-                onChange={e => setToDate(e.target.value)}
-                placeholder="dd-mm-jjjj"
-              />
-            </div>
-            <div className="flex flex-col gap-2 min-w-[200px]">
-              <label className="text-primary-100 font-semibold">Data type</label>
-              <select className="glass-input px-4 py-2 rounded-xl bg-white/60 border border-primary-200 focus:ring-2 focus:ring-primary-400 transition" value={dataType} onChange={e => setDataType(e.target.value)}>
-                {dataTypes.map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
-              </select>
-            </div>
+          <div className="flex flex-col gap-2 min-w-[180px]">
+            <label className="text-primary-100 font-semibold">Van datum</label>
+            <input
+              type="date"
+              className="glass-input px-4 py-2 rounded-xl bg-white/60 border border-primary-200 focus:ring-2 focus:ring-primary-400 transition"
+              value={fromDate}
+              onChange={e => setFromDate(e.target.value)}
+              placeholder="dd-mm-jjjj"
+            />
           </div>
-          {/* Chart Card */}
-          <div className="bg-white/20 rounded-2xl shadow-2xl p-6 border border-white/20 mb-8">
-            <div className="flex items-center gap-4 mb-4">
-              {chartTabs.map(tab => (
-                <button key={tab.value} onClick={() => setChartTab(tab.value)} className={`flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition-all ${chartTab === tab.value ? 'bg-primary-600/80 text-white shadow' : 'bg-white/10 text-primary-100 hover:bg-primary-700/20'}`}>{tab.icon} {tab.label}</button>
-              ))}
-            </div>
-            {loading && <div className="text-primary-200">Laden...</div>}
-            {error && <div className="text-red-400">Fout: {error}</div>}
-            {!loading && !error && data && data.length > 0 && (
-              <div className="w-full h-80">
-                {chartTab === 'line' && (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={data.map(d => ({ ...d, solar_yield: (d.avg_solar_voltage || 0) * (d.avg_solar_current || 0) * 24 / 1000 }))} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#8882" />
-                      <XAxis dataKey="date" tick={{ fill: '#a5b4fc', fontSize: 12 }} />
-                      <YAxis tick={{ fill: '#a5b4fc', fontSize: 12 }} domain={[0, 'dataMax + 0.2']} unit={dataTypeConfig[dataType as keyof typeof dataTypeConfig].unit} />
-                      <Tooltip contentStyle={{ background: '#222', borderRadius: 8, color: '#fff' }} formatter={(value: any) => `${value} ${dataTypeConfig[dataType as keyof typeof dataTypeConfig].unit}`} />
-                      <Line type="monotone" dataKey={dataTypeConfig[dataType as keyof typeof dataTypeConfig].dataKey} stroke="#38bdf8" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                )}
-                {chartTab === 'bar' && (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={data.map(d => ({ ...d, solar_yield: (d.avg_solar_voltage || 0) * (d.avg_solar_current || 0) * 24 / 1000 }))} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#8882" />
-                      <XAxis dataKey="date" tick={{ fill: '#a5b4fc', fontSize: 12 }} />
-                      <YAxis tick={{ fill: '#a5b4fc', fontSize: 12 }} unit={dataTypeConfig[dataType as keyof typeof dataTypeConfig].unit} />
-                      <Tooltip contentStyle={{ background: '#222', borderRadius: 8, color: '#fff' }} formatter={(value: any) => `${value} ${dataTypeConfig[dataType as keyof typeof dataTypeConfig].unit}`} />
-                      <Bar dataKey={dataTypeConfig[dataType as keyof typeof dataTypeConfig].dataKey} fill="#38bdf8" radius={[8, 8, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                )}
-                {chartTab === 'donut' && (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie data={data.map(d => ({ ...d, solar_yield: (d.avg_solar_voltage || 0) * (d.avg_solar_current || 0) * 24 / 1000 }))} dataKey={dataTypeConfig[dataType as keyof typeof dataTypeConfig].dataKey} nameKey="date" cx="50%" cy="50%" innerRadius={60} outerRadius={100} fill="#38bdf8" label>
-                        {data.map((entry, idx) => (
-                          <Cell key={`cell-${idx}`} fill={COLORS[idx % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Legend />
-                      <Tooltip contentStyle={{ background: '#222', borderRadius: 8, color: '#fff' }} formatter={(value: any) => `${value} ${dataTypeConfig[dataType as keyof typeof dataTypeConfig].unit}`} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                )}
-              </div>
-            )}
-            {!loading && !error && (!data || data.length === 0) && <div className="text-primary-200">Geen data beschikbaar voor deze periode.</div>}
+          <div className="flex flex-col gap-2 min-w-[180px]">
+            <label className="text-primary-100 font-semibold">Tot datum</label>
+            <input
+              type="date"
+              className="glass-input px-4 py-2 rounded-xl bg-white/60 border border-primary-200 focus:ring-2 focus:ring-primary-400 transition"
+              value={toDate}
+              onChange={e => setToDate(e.target.value)}
+              placeholder="dd-mm-jjjj"
+            />
           </div>
-          {/* Stats Row */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-8">
-            <div className="glass-card stat-card">
-              <div className="stat-value text-3xl font-bold text-primary-100">{stats.total} {dataTypeConfig[dataType as keyof typeof dataTypeConfig].unit}</div>
-              <div className="stat-label text-primary-200">{dataTypeConfig[dataType as keyof typeof dataTypeConfig].statLabels.total}</div>
-            </div>
-            <div className="glass-card stat-card">
-              <div className="stat-value text-3xl font-bold text-primary-100">{stats.avg} {dataTypeConfig[dataType as keyof typeof dataTypeConfig].unit}</div>
-              <div className="stat-label text-primary-200">{dataTypeConfig[dataType as keyof typeof dataTypeConfig].statLabels.avg}</div>
-            </div>
-            <div className="glass-card stat-card">
-              <div className="stat-value text-3xl font-bold text-primary-100">{stats.peak} {dataTypeConfig[dataType as keyof typeof dataTypeConfig].unit}</div>
-              <div className="stat-label text-primary-200">{dataTypeConfig[dataType as keyof typeof dataTypeConfig].statLabels.peak}</div>
-            </div>
-            {dataType === 'power' && (
-              <div className="glass-card stat-card">
-                <div className="stat-value text-3xl font-bold text-primary-100">{stats.co2} kg</div>
-                <div className="stat-label text-primary-200">{dataTypeConfig[dataType as keyof typeof dataTypeConfig].statLabels.co2}</div>
-              </div>
-            )}
+          <div className="flex flex-col gap-2 min-w-[200px]">
+            <label className="text-primary-100 font-semibold">Data type</label>
+            <select className="glass-input px-4 py-2 rounded-xl bg-white/60 border border-primary-200 focus:ring-2 focus:ring-primary-400 transition" value={dataType} onChange={e => setDataType(e.target.value)}>
+              {dataTypes.map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
+            </select>
           </div>
         </div>
-      </main>
-      {/* Floating user/profile button */}
-      <motion.button
-        initial={{ opacity: 0, y: 40 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.1, type: 'spring' }}
-        className="fixed top-8 right-8 z-40 bg-white/20 backdrop-blur-2xl border border-white/30 shadow-2xl rounded-full p-2 flex items-center gap-3 hover:bg-primary-600/80 hover:text-white transition-all opacity-50 hover:opacity-100 transition-opacity"
-      >
-        <span className="w-10 h-10 rounded-full border-2 border-primary-400 bg-primary-800 flex items-center justify-center">
-          <FiUser className="text-2xl text-primary-200" />
-        </span>
-        <span className="font-bold text-primary-100 pr-4 pl-2 hidden md:inline">
-          {user?.email || user?.sub || 'Gebruiker'}
-        </span>
-      </motion.button>
-    </div>
+        {/* Chart Card */}
+        <div className="bg-white/20 rounded-2xl shadow-2xl p-6 border border-white/20 mb-8">
+          <div className="flex items-center gap-4 mb-4">
+            {chartTabs.map(tab => (
+              <button key={tab.value} onClick={() => setChartTab(tab.value)} className={`flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition-all ${chartTab === tab.value ? 'bg-primary-600/80 text-white shadow' : 'bg-white/10 text-primary-100 hover:bg-primary-700/20'}`}>{tab.icon} {tab.label}</button>
+            ))}
+          </div>
+          {loading && <div className="text-primary-200">Laden...</div>}
+          {error && <div className="text-red-400">Fout: {error}</div>}
+          {!loading && !error && data && data.length > 0 && (
+            <div className="w-full h-80">
+              {chartTab === 'line' && (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={data.map(d => ({ ...d, solar_yield: (d.avg_solar_voltage || 0) * (d.avg_solar_current || 0) * 24 / 1000 }))} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#8882" />
+                    <XAxis dataKey="date" tick={{ fill: '#a5b4fc', fontSize: 12 }} />
+                    <YAxis tick={{ fill: '#a5b4fc', fontSize: 12 }} domain={[0, 'dataMax + 0.2']} unit={dataTypeConfig[dataType as keyof typeof dataTypeConfig].unit} />
+                    <Tooltip contentStyle={{ background: '#222', borderRadius: 8, color: '#fff' }} formatter={(value: any) => `${value} ${dataTypeConfig[dataType as keyof typeof dataTypeConfig].unit}`} />
+                    <Line type="monotone" dataKey={dataTypeConfig[dataType as keyof typeof dataTypeConfig].dataKey} stroke="#38bdf8" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
+              {chartTab === 'bar' && (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={data.map(d => ({ ...d, solar_yield: (d.avg_solar_voltage || 0) * (d.avg_solar_current || 0) * 24 / 1000 }))} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#8882" />
+                    <XAxis dataKey="date" tick={{ fill: '#a5b4fc', fontSize: 12 }} />
+                    <YAxis tick={{ fill: '#a5b4fc', fontSize: 12 }} unit={dataTypeConfig[dataType as keyof typeof dataTypeConfig].unit} />
+                    <Tooltip contentStyle={{ background: '#222', borderRadius: 8, color: '#fff' }} formatter={(value: any) => `${value} ${dataTypeConfig[dataType as keyof typeof dataTypeConfig].unit}`} />
+                    <Bar dataKey={dataTypeConfig[dataType as keyof typeof dataTypeConfig].dataKey} fill="#38bdf8" radius={[8, 8, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+              {chartTab === 'donut' && (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={data.map(d => ({ ...d, solar_yield: (d.avg_solar_voltage || 0) * (d.avg_solar_current || 0) * 24 / 1000 }))} dataKey={dataTypeConfig[dataType as keyof typeof dataTypeConfig].dataKey} nameKey="date" cx="50%" cy="50%" innerRadius={60} outerRadius={100} fill="#38bdf8" label>
+                      {data.map((entry, idx) => (
+                        <Cell key={`cell-${idx}`} fill={COLORS[idx % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Legend />
+                    <Tooltip contentStyle={{ background: '#222', borderRadius: 8, color: '#fff' }} formatter={(value: any) => `${value} ${dataTypeConfig[dataType as keyof typeof dataTypeConfig].unit}`} />
+                  </PieChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+          )}
+          {!loading && !error && (!data || data.length === 0) && <div className="text-primary-200">Geen data beschikbaar voor deze periode.</div>}
+        </div>
+        {/* Stats Row */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+          <div className="glass-card stat-card">
+            <div className="stat-value text-3xl font-bold text-primary-100">{stats.total} {dataTypeConfig[dataType as keyof typeof dataTypeConfig].unit}</div>
+            <div className="stat-label text-primary-200">{dataTypeConfig[dataType as keyof typeof dataTypeConfig].statLabels.total}</div>
+          </div>
+          <div className="glass-card stat-card">
+            <div className="stat-value text-3xl font-bold text-primary-100">{stats.avg} {dataTypeConfig[dataType as keyof typeof dataTypeConfig].unit}</div>
+            <div className="stat-label text-primary-200">{dataTypeConfig[dataType as keyof typeof dataTypeConfig].statLabels.avg}</div>
+          </div>
+          <div className="glass-card stat-card">
+            <div className="stat-value text-3xl font-bold text-primary-100">{stats.peak} {dataTypeConfig[dataType as keyof typeof dataTypeConfig].unit}</div>
+            <div className="stat-label text-primary-200">{dataTypeConfig[dataType as keyof typeof dataTypeConfig].statLabels.peak}</div>
+          </div>
+          {dataType === 'power' && (
+            <div className="glass-card stat-card">
+              <div className="stat-value text-3xl font-bold text-primary-100">{stats.co2} kg</div>
+              <div className="stat-label text-primary-200">{dataTypeConfig[dataType as keyof typeof dataTypeConfig].statLabels.co2}</div>
+            </div>
+          )}
+        </div>
+      </div>
+    </Layout>
   );
 };
 
