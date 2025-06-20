@@ -18,11 +18,25 @@ const AIPredictionWidget = () => {
         const res = await fetch(`${API_URL}/api/measurements/daily`);
         if (!res.ok) throw new Error('Failed to fetch data');
         const data = await res.json();
-        const last7 = Array.isArray(data) ? data.slice(0, 7) : [];
+        // Convert numeric fields from string to number
+        const numericFields = [
+          'avg_solar_voltage', 'avg_solar_current', 'avg_hydrogen_production',
+          'avg_power_consumption', 'avg_hydrogen_consumption', 'avg_outside_temperature',
+          'avg_inside_temperature', 'avg_air_pressure', 'avg_humidity', 'avg_battery_level',
+          'avg_co2_level', 'avg_hydrogen_storage_house', 'avg_hydrogen_storage_car'
+        ];
+        const dataWithNumbers = Array.isArray(data) ? data.map((row: any) => {
+          const newRow = { ...row };
+          numericFields.forEach(field => {
+            if (newRow[field] !== undefined) newRow[field] = Number(newRow[field]);
+          });
+          return newRow;
+        }) : [];
+        const last7 = dataWithNumbers.slice(0, 7);
         if (!last7.length) throw new Error('No data available');
-
-        // 2. Prepare prompt for AI
-        const prompt = `Je bent een slimme energie-assistent. Voorspel het verwachte energieverbruik voor morgen in kWh, gebaseerd op deze dagelijkse data: ${JSON.stringify(last7)}. Geef alleen een getal terug, bijvoorbeeld: 24.8`;
+        // Only send avg_power_consumption to the AI for clarity
+        const powerData = last7.map(d => d.avg_power_consumption);
+        const prompt = `Je bent een slimme energie-assistent. Voorspel het verwachte energieverbruik voor morgen in kWh, gebaseerd op deze dagelijkse verbruiksdata: ${JSON.stringify(powerData)}. Geef alleen een getal terug, bijvoorbeeld: 24.8`;
 
         // 3. Call Mistral API
         const aiRes = await fetch('https://api.mistral.ai/v1/chat/completions', {

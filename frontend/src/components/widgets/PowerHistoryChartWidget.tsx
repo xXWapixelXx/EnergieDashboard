@@ -17,7 +17,21 @@ const PowerHistoryChartWidget = () => {
         return res.json();
       })
       .then((json) => {
-        setData(json.slice(0, 14).reverse()); // last 14 days, oldest to newest
+        // Convert numeric fields from string to number
+        const numericFields = [
+          'avg_solar_voltage', 'avg_solar_current', 'avg_hydrogen_production',
+          'avg_power_consumption', 'avg_hydrogen_consumption', 'avg_outside_temperature',
+          'avg_inside_temperature', 'avg_air_pressure', 'avg_humidity', 'avg_battery_level',
+          'avg_co2_level', 'avg_hydrogen_storage_house', 'avg_hydrogen_storage_car'
+        ];
+        const dataWithNumbers = json.map((row: any) => {
+          const newRow = { ...row };
+          numericFields.forEach(field => {
+            if (newRow[field] !== undefined) newRow[field] = Number(newRow[field]);
+          });
+          return newRow;
+        });
+        setData(dataWithNumbers.slice(0, 14).reverse()); // last 14 days, oldest to newest
         setError(null);
       })
       .catch((err) => setError(err.message))

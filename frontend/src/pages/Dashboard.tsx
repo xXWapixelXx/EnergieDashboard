@@ -5,7 +5,7 @@ import { widgetRegistry } from '../components/widgets';
 import React from 'react';
 import type { DropResult, DraggableProvided, DroppableProvided, DraggableStateSnapshot } from 'react-beautiful-dnd';
 import authService from '../services/auth';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 // Import widgets directly
 import PowerHistoryChartWidget from '../components/widgets/PowerHistoryChartWidget';
@@ -15,11 +15,11 @@ import TemperatureWidget from '../components/widgets/TemperatureWidget';
 import AIAlertsWidget from '../components/widgets/AIAlertsWidget';
 
 const navItems = [
-  { icon: <FiHome />, label: 'Dashboard', active: true },
-  { icon: <FiBarChart2 />, label: 'Historiek' },
-  { icon: <FiSettings />, label: 'Instellingen' },
-  { icon: <FiAlertTriangle />, label: 'Alerts', hasAlert: true },
-  { icon: <FiUser />, label: 'Admin' },
+  { icon: <FiHome />, label: 'Dashboard', path: '/dashboard' },
+  { icon: <FiBarChart2 />, label: 'Historiek', path: '/historiek' },
+  { icon: <FiSettings />, label: 'Instellingen', path: '/instellingen' },
+  { icon: <FiAlertTriangle />, label: 'Alerts', path: '/alerts', hasAlert: true },
+  { icon: <FiUser />, label: 'Admin', path: '/admin' },
 ];
 
 const WIDGETS_STORAGE_KEY = 'dashboard_widgets_v1';
@@ -52,6 +52,7 @@ const Dashboard = () => {
   // Get logged-in user
   const user = authService.getUser();
   const navigate = useNavigate();
+  const location = useLocation();
 
   React.useEffect(() => {
     localStorage.setItem(WIDGETS_STORAGE_KEY, JSON.stringify(widgetState));
@@ -103,8 +104,10 @@ const Dashboard = () => {
             <motion.button
               key={item.label}
               whileHover={{ scale: 1.15 }}
+              onClick={() => navigate(item.path)}
               className={`relative flex flex-col items-center justify-center w-16 h-16 rounded-2xl text-3xl transition-all duration-150
-                ${item.active ? 'bg-primary-600/80 text-white shadow-lg' : 'text-primary-200 hover:bg-primary-700/30 hover:text-white'}`}
+                ${location.pathname === item.path ? 'bg-primary-600/80 text-white shadow-lg' : 'text-primary-200 hover:bg-primary-700/30 hover:text-white'}`}
+              title={item.label}
             >
               {item.icon}
               {item.hasAlert && (
