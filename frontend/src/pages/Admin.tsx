@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { FiUser, FiSearch, FiEdit, FiTrash2, FiPlus, FiShield, FiCheckCircle, FiXCircle, FiChevronDown, FiSettings, FiLogOut, FiDownload, FiBarChart2, FiRefreshCw, FiAlertTriangle, FiEye } from 'react-icons/fi';
+import { FiUser, FiSearch, FiEdit, FiTrash2, FiPlus, FiShield, FiCheckCircle, FiXCircle, FiChevronDown, FiSettings, FiLogOut, FiDownload, FiBarChart2, FiRefreshCw, FiAlertTriangle, FiEye, FiSend } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import authService from '../services/auth';
 import Layout from '../components/Layout';
+import { toast } from 'react-hot-toast';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
@@ -103,6 +104,18 @@ const Admin = () => {
       fetchUsers(); // Refresh users list
     } catch (e: any) {
       setEditUserError(e.response?.data?.detail || 'Fout bij bijwerken gebruiker');
+    }
+  };
+
+  const handleSendTestAlert = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API_URL}/api/notifications/test-alert`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success('Test alert succesvol verzonden!');
+    } catch (error: any) {
+      toast.error(error.response?.data?.detail || 'Fout bij verzenden van test alert.');
     }
   };
 
@@ -291,6 +304,19 @@ const Admin = () => {
               <div className="text-center py-8 bg-white/30 rounded-xl">
                 <FiBarChart2 className="mx-auto text-4xl text-primary-400 mb-2" />
                 <p className="text-primary-200">Geen trainingsgeschiedenis gevonden.</p>
+              </div>
+            </section>
+
+            {/* System Tools */}
+            <section className="bg-white/20 rounded-2xl shadow-xl p-6 border border-white/20">
+              <h2 className="text-xl font-bold text-primary-100 mb-4">Systeem Tools</h2>
+              <div className="flex gap-4">
+                <button 
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-yellow-500 to-orange-500 text-white shadow-lg hover:scale-105 transition-all font-semibold"
+                  onClick={handleSendTestAlert}
+                >
+                  <FiSend /> Test Notificatie Verzenden
+                </button>
               </div>
             </section>
           </>

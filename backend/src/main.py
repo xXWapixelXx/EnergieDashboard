@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status, WebSocket, WebSocketDisconnect
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Dict, Any
@@ -8,7 +8,19 @@ from src.utils.auth import create_access_token, create_refresh_token, verify_tok
 from src.models.user import UserCreate, UserInDB, Token, UserUpdate
 import logging
 import os
+import asyncio
+from datetime import datetime
 from dotenv import load_dotenv
+
+# SQL for notifications table
+# CREATE TABLE notifications (
+#     id INT AUTO_INCREMENT PRIMARY KEY,
+#     title VARCHAR(255) NOT NULL,
+#     message TEXT,
+#     type VARCHAR(50),
+#     is_read BOOLEAN DEFAULT FALSE,
+#     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+# );
 
 # Load environment variables
 load_dotenv()
@@ -45,6 +57,26 @@ user_db = UserDB(
     password=os.getenv("DB_PASSWORD", ""),
     database=os.getenv("DB_NAME", "energydashboard")
 )
+
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: List[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+
+    def disconnect(self, websocket: WebSocket):
+        self.active_connections.remove(websocket)
+
+    async def send_personal_message(self, message: str, websocket: WebSocket):
+        await websocket.send_text(message)
+
+    async def broadcast(self, message: str):
+        for connection in self.active_connections:
+            await connection.send_text(message)
+
+manager = ConnectionManager()
 
 # Dependency to get current user
 async def get_current_user(token: str = Depends(oauth2_scheme)) -> UserInDB:
@@ -181,6 +213,52 @@ async def delete_user(
             detail="User not found"
         )
     return {"message": "User deleted successfully"}
+
+# Websocket endpoint
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await manager.connect(websocket)
+    try:
+        while True:
+            # We can receive messages here if needed, for now, it just keeps the connection open
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
+
+# Notification endpoints
+@app.get("/api/notifications")
+async def get_notifications(current_user: UserInDB = Depends(get_current_user)):
+    # For now, only admins can see all notifications
+    if current_user.role not in ["admin", "superadmin"]:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    return user_db.get_all_notifications()
+
+@app.post("/api/notifications/read/{notification_id}")
+async def mark_notification_as_read(notification_id: int, current_user: UserInDB = Depends(get_current_user)):
+    if current_user.role not in ["admin", "superadmin"]:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    if not user_db.mark_notification_as_read(notification_id):
+        raise HTTPException(status_code=404, detail="Notification not found")
+    return {"message": "Notification marked as read"}
+
+@app.post("/api/notifications/test-alert")
+async def test_alert(current_user: UserInDB = Depends(get_current_user)):
+    if current_user.role not in ["superadmin"]:
+         raise HTTPException(status_code=403, detail="Only superadmins can trigger test alerts")
+    
+    notification = {
+        "title": "High Consumption Alert",
+        "message": "Power consumption has exceeded the threshold of 5 kWh.",
+        "type": "warning",
+        "created_at": datetime.utcnow().isoformat()
+    }
+    
+    # Store in DB and get the full notification object with ID
+    new_notification = user_db.create_notification(notification)
+
+    # Broadcast to all connected clients
+    await manager.broadcast(str(new_notification))
+    return {"message": "Test alert sent", "data": new_notification}
 
 @app.get("/")
 async def root():

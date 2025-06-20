@@ -173,6 +173,64 @@ class UserDB:
         finally:
             cursor.close()
 
+    # --- Notification Methods ---
+
+    def create_notification(self, notification: dict) -> dict:
+        """Create a new notification."""
+        try:
+            cursor = self.connection.cursor(dictionary=True)
+            query = """
+                INSERT INTO notifications (title, message, type)
+                VALUES (%s, %s, %s)
+            """
+            cursor.execute(query, (notification['title'], notification['message'], notification['type']))
+            self.connection.commit()
+            
+            notification_id = cursor.lastrowid
+            cursor.execute("SELECT * FROM notifications WHERE id = %s", (notification_id,))
+            new_notification = cursor.fetchone()
+            
+            # Convert datetime to string for JSON serialization
+            if new_notification and 'created_at' in new_notification:
+                new_notification['created_at'] = new_notification['created_at'].isoformat()
+            
+            return new_notification
+        except Error as e:
+            logger.error(f"Error creating notification: {e}")
+            raise
+        finally:
+            cursor.close()
+
+    def get_all_notifications(self) -> List[dict]:
+        """Get all notifications, newest first."""
+        try:
+            cursor = self.connection.cursor(dictionary=True)
+            cursor.execute("SELECT * FROM notifications ORDER BY created_at DESC")
+            notifications = cursor.fetchall()
+            # Convert datetime to string for JSON serialization
+            for n in notifications:
+                if 'created_at' in n:
+                    n['created_at'] = n['created_at'].isoformat()
+            return notifications
+        except Error as e:
+            logger.error(f"Error getting notifications: {e}")
+            raise
+        finally:
+            cursor.close()
+
+    def mark_notification_as_read(self, notification_id: int) -> bool:
+        """Mark a notification as read."""
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute("UPDATE notifications SET is_read = TRUE WHERE id = %s", (notification_id,))
+            self.connection.commit()
+            return cursor.rowcount > 0
+        except Error as e:
+            logger.error(f"Error marking notification as read: {e}")
+            raise
+        finally:
+            cursor.close()
+
     def verify_user_credentials(self, username_or_email: str, password: str) -> Optional[UserInDB]:
         """Verify user credentials by username or email."""
         try:

@@ -1,9 +1,23 @@
-import React, { useState } from 'react';
-import { FiHome, FiBarChart2, FiSettings, FiAlertTriangle, FiUser, FiLogOut, FiChevronDown, FiShield } from 'react-icons/fi';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { FiHome, FiBarChart2, FiSettings, FiAlertTriangle, FiUser, FiLogOut, FiChevronDown, FiShield, FiBell, FiCheck } from 'react-icons/fi';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import authService from '../services/auth';
 import type { User } from '../types/auth';
+import { Toaster, toast } from 'react-hot-toast';
+import axios from 'axios';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:8000';
+
+interface Notification {
+  id: number;
+  title: string;
+  message: string;
+  type: 'warning' | 'info' | 'success';
+  is_read: boolean;
+  created_at: string;
+}
 
 const navItems = [
   { icon: <FiHome />, label: 'Dashboard', path: '/dashboard' },
@@ -78,6 +92,142 @@ const Sidebar: React.FC = () => {
   );
 };
 
+const NotificationBell: React.FC = () => {
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [showPanel, setShowPanel] = useState(false);
+  const unreadCount = notifications.filter(n => !n.is_read).length;
+
+  useEffect(() => {
+    // Fetch initial notifications
+    const fetchNotifications = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await axios.get(`${API_URL}/api/notifications`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setNotifications(res.data);
+      } catch (error) {
+        console.error("Failed to fetch notifications", error);
+      }
+    };
+    fetchNotifications();
+
+    // Setup WebSocket
+    const ws = new WebSocket(`${WS_URL}/ws`);
+    ws.onmessage = (event) => {
+      try {
+        const newNotification = JSON.parse(event.data.replace(/'/g, '"')); // Poor man's deserialization
+        setNotifications(prev => [newNotification, ...prev]);
+        toast.custom((t) => (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className={`bg-slate-900/90 backdrop-blur-xl border border-slate-700 rounded-2xl shadow-2xl p-4 flex items-center gap-4`}
+          >
+            <FiAlertTriangle className="text-yellow-400 text-2xl" />
+            <div>
+              <h4 className="font-bold text-yellow-300">{newNotification.title}</h4>
+              <p className="text-slate-300">{newNotification.message}</p>
+            </div>
+          </motion.div>
+        ));
+        // Optional: play a sound
+        new Audio('/notification.mp3').play().catch(e => console.error("Error playing sound:", e));
+      } catch (e) {
+        console.error("Failed to parse websocket message", e, event.data);
+      }
+    };
+
+    ws.onclose = () => {
+      console.log('WebSocket disconnected');
+      // Optional: implement reconnection logic
+    };
+    
+    return () => {
+      ws.close();
+    };
+  }, []);
+  
+  const handleMarkAsRead = async (id: number) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API_URL}/api/notifications/read/${id}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setNotifications(notifications.map(n => n.id === id ? { ...n, is_read: true } : n));
+    } catch (error) {
+      console.error("Failed to mark notification as read", error);
+    }
+  };
+
+  return (
+    <div className="fixed top-8 right-80 z-40">
+       <motion.button
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4, type: 'spring' }}
+        onClick={() => setShowPanel(v => !v)}
+        className="relative flex items-center justify-center w-14 h-14 bg-sky-600/50 rounded-full border-2 border-sky-400/50 shadow-lg hover:bg-sky-700/80 transition-all text-white"
+      >
+        <FiBell className="text-4xl" />
+        {unreadCount > 0 && (
+          <motion.span 
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className="absolute -top-1 -right-1 w-6 h-6 bg-red-600 rounded-full border-2 border-slate-800 flex items-center justify-center text-xs font-bold"
+          >
+            {unreadCount}
+          </motion.span>
+        )}
+      </motion.button>
+      <AnimatePresence>
+        {showPanel && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10, scale: 0.95 }} 
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+            className="absolute right-0 mt-3 w-96 bg-slate-900/90 backdrop-blur-xl border border-slate-700 rounded-2xl shadow-2xl z-50 overflow-hidden"
+          >
+            <div className="p-4 border-b border-slate-700">
+              <h3 className="font-bold text-lg text-sky-200">Notificaties</h3>
+            </div>
+            <div className="max-h-96 overflow-y-auto">
+              {notifications.length > 0 ? (
+                notifications.map(n => (
+                  <div 
+                    key={n.id}
+                    className={`flex items-start gap-3 p-4 border-b border-slate-800 transition-colors ${!n.is_read ? 'bg-sky-900/20' : ''}`}
+                  >
+                    <div className={`mt-1 p-2 rounded-full ${ n.type === 'warning' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-sky-500/20 text-sky-400'}`}>
+                      <FiAlertTriangle />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-semibold text-sky-300">{n.title}</p>
+                      <p className="text-sm text-slate-400">{n.message}</p>
+                      <p className="text-xs text-slate-500 mt-1">{new Date(n.created_at).toLocaleString()}</p>
+                    </div>
+                    {!n.is_read && (
+                       <button onClick={() => handleMarkAsRead(n.id)} className="p-2 rounded-full hover:bg-slate-700" title="Markeer als gelezen">
+                         <FiCheck className="text-green-400" />
+                       </button>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className="text-center p-8 text-slate-500">
+                  <FiBell className="mx-auto text-4xl mb-2" />
+                  Je hebt geen nieuwe notificaties.
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
 const ProfileButton: React.FC<{ user: User | null }> = ({ user }) => {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const navigate = useNavigate();
@@ -134,8 +284,10 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const user = authService.getUser();
   return (
     <div className="relative min-h-screen w-screen overflow-x-hidden bg-gradient-to-br from-primary-900 via-purple-900 to-gray-900 flex items-stretch">
+      <Toaster position="top-center" reverseOrder={false} />
       <Sidebar />
       <main className="flex-1 flex flex-col py-12 ml-32">
+        <NotificationBell />
         <ProfileButton user={user} />
         {children}
       </main>
