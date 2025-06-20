@@ -23,10 +23,10 @@ const navItems = [
   { icon: <FiHome />, label: 'Dashboard', path: '/dashboard' },
   { icon: <FiBarChart2 />, label: 'Historiek', path: '/historiek' },
   { icon: <FiSettings />, label: 'Instellingen', path: '/instellingen' },
-  { icon: <FiAlertTriangle />, label: 'Alerts', path: '/alerts', hasAlert: true },
+  { icon: <FiAlertTriangle />, label: 'Alerts', path: '/alerts' },
 ];
 
-const Sidebar: React.FC = () => {
+const Sidebar: React.FC<{ unreadCount: number }> = ({ unreadCount }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const user = authService.getUser();
@@ -63,8 +63,14 @@ const Sidebar: React.FC = () => {
             title={item.label}
           >
             {item.icon}
-            {item.hasAlert && (
-              <span className="absolute top-3 right-3 w-3 h-3 bg-red-500 rounded-full border-2 border-white/40"></span>
+            {item.label === 'Alerts' && unreadCount > 0 && (
+              <motion.span 
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="absolute top-2 right-2 w-5 h-5 bg-red-500 rounded-full border-2 border-white/40 flex items-center justify-center text-xs font-bold text-white"
+              >
+                {unreadCount}
+              </motion.span>
             )}
           </motion.button>
         ))}
@@ -92,74 +98,12 @@ const Sidebar: React.FC = () => {
   );
 };
 
-const NotificationBell: React.FC = () => {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+const NotificationBell: React.FC<{ 
+  notifications: Notification[], 
+  onMarkAsRead: (id: number) => void 
+}> = ({ notifications, onMarkAsRead }) => {
   const [showPanel, setShowPanel] = useState(false);
   const unreadCount = notifications.filter(n => !n.is_read).length;
-
-  useEffect(() => {
-    // Fetch initial notifications
-    const fetchNotifications = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const res = await axios.get(`${API_URL}/api/notifications`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setNotifications(res.data);
-      } catch (error) {
-        console.error("Failed to fetch notifications", error);
-      }
-    };
-    fetchNotifications();
-
-    // Setup WebSocket
-    const ws = new WebSocket(`${WS_URL}/ws`);
-    ws.onmessage = (event) => {
-      try {
-        const newNotification = JSON.parse(event.data.replace(/'/g, '"')); // Poor man's deserialization
-        setNotifications(prev => [newNotification, ...prev]);
-        toast.custom((t) => (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            className={`bg-slate-900/90 backdrop-blur-xl border border-slate-700 rounded-2xl shadow-2xl p-4 flex items-center gap-4`}
-          >
-            <FiAlertTriangle className="text-yellow-400 text-2xl" />
-            <div>
-              <h4 className="font-bold text-yellow-300">{newNotification.title}</h4>
-              <p className="text-slate-300">{newNotification.message}</p>
-            </div>
-          </motion.div>
-        ));
-        // Optional: play a sound
-        new Audio('/notification.mp3').play().catch(e => console.error("Error playing sound:", e));
-      } catch (e) {
-        console.error("Failed to parse websocket message", e, event.data);
-      }
-    };
-
-    ws.onclose = () => {
-      console.log('WebSocket disconnected');
-      // Optional: implement reconnection logic
-    };
-    
-    return () => {
-      ws.close();
-    };
-  }, []);
-  
-  const handleMarkAsRead = async (id: number) => {
-    try {
-      const token = localStorage.getItem('token');
-      await axios.post(`${API_URL}/api/notifications/read/${id}`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setNotifications(notifications.map(n => n.id === id ? { ...n, is_read: true } : n));
-    } catch (error) {
-      console.error("Failed to mark notification as read", error);
-    }
-  };
 
   return (
     <div className="fixed top-8 right-80 z-40">
@@ -208,7 +152,7 @@ const NotificationBell: React.FC = () => {
                       <p className="text-xs text-slate-500 mt-1">{new Date(n.created_at).toLocaleString()}</p>
                     </div>
                     {!n.is_read && (
-                       <button onClick={() => handleMarkAsRead(n.id)} className="p-2 rounded-full hover:bg-slate-700" title="Markeer als gelezen">
+                       <button onClick={() => onMarkAsRead(n.id)} className="p-2 rounded-full hover:bg-slate-700" title="Markeer als gelezen">
                          <FiCheck className="text-green-400" />
                        </button>
                     )}
@@ -282,12 +226,78 @@ const ProfileButton: React.FC<{ user: User | null }> = ({ user }) => {
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const user = authService.getUser();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const unreadCount = notifications.filter(n => !n.is_read).length;
+
+  useEffect(() => {
+    // Fetch initial notifications
+    const fetchNotifications = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        const res = await axios.get(`${API_URL}/api/notifications`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setNotifications(res.data);
+      } catch (error) {
+        console.error("Failed to fetch notifications", error);
+      }
+    };
+    fetchNotifications();
+
+    // Setup WebSocket
+    const ws = new WebSocket(`${WS_URL}/ws`);
+    ws.onmessage = (event) => {
+      try {
+        const newNotification = JSON.parse(event.data.replace(/'/g, '"'));
+        setNotifications(prev => [newNotification, ...prev]);
+        toast.custom((t) => (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className={`bg-slate-900/90 backdrop-blur-xl border border-slate-700 rounded-2xl shadow-2xl p-4 flex items-center gap-4`}
+          >
+            <FiAlertTriangle className="text-yellow-400 text-2xl" />
+            <div>
+              <h4 className="font-bold text-yellow-300">{newNotification.title}</h4>
+              <p className="text-slate-300">{newNotification.message}</p>
+            </div>
+          </motion.div>
+        ));
+        new Audio('/notification.mp3').play().catch(e => console.error("Error playing sound:", e));
+      } catch (e) {
+        console.error("Failed to parse websocket message", e, event.data);
+      }
+    };
+
+    ws.onclose = () => {
+      console.log('WebSocket disconnected');
+    };
+    
+    return () => {
+      ws.close();
+    };
+  }, []);
+  
+  const handleMarkAsRead = async (id: number) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API_URL}/api/notifications/read/${id}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setNotifications(notifications.map(n => n.id === id ? { ...n, is_read: true } : n));
+    } catch (error) {
+      console.error("Failed to mark notification as read", error);
+    }
+  };
+
   return (
     <div className="relative min-h-screen w-screen overflow-x-hidden bg-gradient-to-br from-primary-900 via-purple-900 to-gray-900 flex items-stretch">
       <Toaster position="top-center" reverseOrder={false} />
-      <Sidebar />
+      <Sidebar unreadCount={unreadCount} />
       <main className="flex-1 flex flex-col py-12 ml-32">
-        <NotificationBell />
+        <NotificationBell notifications={notifications} onMarkAsRead={handleMarkAsRead} />
         <ProfileButton user={user} />
         {children}
       </main>
