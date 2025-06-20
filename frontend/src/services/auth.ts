@@ -84,7 +84,9 @@ class AuthService {
   }
 
   public getUser(): User | null {
-    return this.user;
+    // Always decode from the latest token in localStorage
+    const token = localStorage.getItem('token');
+    return this.getUserFromToken(token);
   }
 
   public async register(credentials: RegisterCredentials): Promise<void> {

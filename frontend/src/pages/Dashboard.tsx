@@ -19,7 +19,6 @@ const navItems = [
   { icon: <FiBarChart2 />, label: 'Historiek', path: '/historiek' },
   { icon: <FiSettings />, label: 'Instellingen', path: '/instellingen' },
   { icon: <FiAlertTriangle />, label: 'Alerts', path: '/alerts', hasAlert: true },
-  { icon: <FiUser />, label: 'Admin', path: '/admin' },
 ];
 
 const WIDGETS_STORAGE_KEY = 'dashboard_widgets_v1';
@@ -115,7 +114,19 @@ const Dashboard = () => {
               )}
             </motion.button>
           ))}
-          {/* Logout button under Admin */}
+          {/* Only show Admin button if user is admin or superadmin */}
+          {(user?.role === 'admin' || user?.role === 'superadmin') && (
+            <motion.button
+              whileHover={{ scale: 1.15 }}
+              onClick={() => navigate('/admin')}
+              className={`relative flex flex-col items-center justify-center w-16 h-16 rounded-2xl text-3xl transition-all duration-150
+                ${location.pathname === '/admin' ? 'bg-primary-600/80 text-white shadow-lg' : 'text-primary-200 hover:bg-primary-700/30 hover:text-white'}`}
+              title="Admin"
+            >
+              <FiUser />
+            </motion.button>
+          )}
+          {/* Always show logout button at the bottom */}
           <motion.button
             whileHover={{ scale: 1.15 }}
             className="relative flex flex-col items-center justify-center w-16 h-16 rounded-2xl text-3xl transition-all duration-150 text-primary-200 hover:bg-red-600/80 hover:text-white mt-2"
@@ -215,7 +226,7 @@ const Dashboard = () => {
           <FiUser className="text-2xl text-primary-200" />
         </span>
         <span className="font-bold text-primary-100 pr-4 pl-2 hidden md:inline">
-          {user?.email || 'Gebruiker'}
+          {user?.email || user?.sub || 'Gebruiker'}
         </span>
       </motion.button>
     </div>
