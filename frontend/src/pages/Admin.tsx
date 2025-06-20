@@ -299,7 +299,7 @@ const Admin = () => {
             </section>
 
             {/* Training History */}
-            <section className="bg-white/20 rounded-2xl shadow-xl p-6 border border-white/20">
+            <section className="bg-white/20 rounded-2xl shadow-xl p-6 border border-white/20 mb-8">
               <h2 className="text-xl font-bold text-primary-100 mb-4">Training Geschiedenis</h2>
               <div className="text-center py-8 bg-white/30 rounded-xl">
                 <FiBarChart2 className="mx-auto text-4xl text-primary-400 mb-2" />

@@ -4,6 +4,7 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Historiek from './pages/Historiek';
 import Admin from './pages/Admin';
+import Alerts from './pages/Alerts';
 import authService from './services/auth';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -33,6 +34,7 @@ function App() {
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/historiek" element={<ProtectedRoute><Historiek /></ProtectedRoute>} />
       <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
+      <Route path="/alerts" element={<ProtectedRoute><Alerts /></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/dashboard" />} />
     </Routes>
   );

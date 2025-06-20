@@ -324,4 +324,4 @@ const Historiek = () => {
   );
 };
 
-export default Historiek; 
+export default Historiek;  
