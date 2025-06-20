@@ -141,6 +141,29 @@ async def read_users(current_user: UserInDB = Depends(get_current_user)):
         )
     return user_db.get_all_users()
 
+@app.put("/users/{user_id}", response_model=UserInDB)
+async def update_user(
+    user_id: int,
+    user_update: UserUpdate,
+    current_user: UserInDB = Depends(get_current_user)
+):
+    if current_user.role not in ["admin", "superadmin"]:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    # Optional: Prevent admins from editing superadmins
+    if current_user.role == 'admin':
+        target_user = user_db.get_user_by_id(user_id)
+        if target_user and target_user.role == 'superadmin':
+            raise HTTPException(status_code=403, detail="Admins cannot edit superadmins")
+
+    updated_user = user_db.update_user(user_id, user_update)
+    if not updated_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found or no changes made"
+        )
+    return updated_user
+
 @app.delete("/users/{user_id}")
 async def delete_user(
     user_id: int,

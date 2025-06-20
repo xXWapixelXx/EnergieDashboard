@@ -79,6 +79,19 @@ class UserDB:
         finally:
             cursor.close()
 
+    def get_user_by_id(self, user_id: int) -> Optional[UserInDB]:
+        """Get user by ID."""
+        try:
+            cursor = self.connection.cursor(dictionary=True)
+            cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
+            user_data = cursor.fetchone()
+            return UserInDB(**user_data) if user_data else None
+        except Error as e:
+            logger.error(f"Error getting user by ID: {e}")
+            raise
+        finally:
+            cursor.close()
+
     def update_user(self, user_id: int, user_update: UserUpdate) -> Optional[UserInDB]:
         """Update user information."""
         try:
@@ -98,6 +111,9 @@ class UserDB:
             if user_update.is_active is not None:
                 update_fields.append("is_active = %s")
                 values.append(user_update.is_active)
+            if user_update.role is not None:
+                update_fields.append("role = %s")
+                values.append(user_update.role)
             
             if not update_fields:
                 return None
