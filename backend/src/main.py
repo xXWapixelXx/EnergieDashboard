@@ -11,6 +11,14 @@ import os
 import asyncio
 from datetime import datetime
 from dotenv import load_dotenv
+import requests
+import pandas as pd
+
+# Load environment variables
+load_dotenv()
+
+MISTRAL_API_URL = os.getenv('MISTRAL_API_URL')
+MISTRAL_API_KEY = os.getenv('MISTRAL_API_KEY')
 
 # SQL for notifications table
 # CREATE TABLE notifications (
@@ -21,9 +29,6 @@ from dotenv import load_dotenv
 #     is_read BOOLEAN DEFAULT FALSE,
 #     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 # );
-
-# Load environment variables
-load_dotenv()
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -325,8 +330,289 @@ async def import_data():
         logger.error(f"Error in import_data: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+# Device mapping: known columns to device names
+DEVICE_INFO_MAP = {
+    'Zonnepaneelspanning (V)': {'id': 'solar_voltage', 'label': 'Zonnepaneelspanning', 'icon': 'FiSun', 'unit': 'V'},
+    'Zonnepaneelstroom (A)': {'id': 'solar_current', 'label': 'Zonnepaneelstroom', 'icon': 'FiZap', 'unit': 'A'},
+    'Waterstofproductie (L/u)': {'id': 'hydrogen_production', 'label': 'Waterstofproductie', 'icon': 'FiDroplet', 'unit': 'L/u'},
+    'Stroomverbruik woning (kW)': {'id': 'power_consumption', 'label': 'Stroomverbruik woning', 'icon': 'FiHome', 'unit': 'kW'},
+    'Waterstofverbruik auto (L/u)': {'id': 'hydrogen_consumption', 'label': 'Waterstofverbruik auto', 'icon': 'FiTruck', 'unit': 'L/u'},
+    'Buitentemperatuur (°C)': {'id': 'outside_temperature', 'label': 'Buitentemperatuur', 'icon': 'FiThermometer', 'unit': '°C'},
+    'Binnentemperatuur (°C)': {'id': 'inside_temperature', 'label': 'Binnentemperatuur', 'icon': 'FiThermometer', 'unit': '°C'},
+    'Luchtdruk (hPa)': {'id': 'air_pressure', 'label': 'Luchtdruk', 'icon': 'FiWind', 'unit': 'hPa'},
+    'Luchtvochtigheid (%)': {'id': 'humidity', 'label': 'Luchtvochtigheid', 'icon': 'FiCloudRain', 'unit': '%'},
+    'Accuniveau (%)': {'id': 'battery_level', 'label': 'Accuniveau', 'icon': 'FiBattery', 'unit': '%'},
+    'CO2-concentratie binnen (ppm)': {'id': 'co2_level', 'label': 'CO2-concentratie binnen', 'icon': 'FiActivity', 'unit': 'ppm'},
+    'Waterstofopslag woning (%)': {'id': 'hydrogen_storage_house', 'label': 'Waterstofopslag woning', 'icon': 'FiBox', 'unit': '%'},
+    'Waterstofopslag auto (%)': {'id': 'hydrogen_storage_car', 'label': 'Waterstofopslag auto', 'icon': 'FiBox', 'unit': '%'},
+}
+
+IGNORE_COLUMNS = {'Tijdstip', 'timestamp'}
+
+def ai_guess_device(column_name):
+    if not MISTRAL_API_URL or not MISTRAL_API_KEY:
+        # Fallback: prettify the column name, unknown unit/icon
+        return {
+            'label': column_name.replace('_', ' ').capitalize(),
+            'unit': '',
+            'icon': 'FiCpu'
+        }
+    prompt = (
+        "Geef ALLEEN een korte string in het formaat: LABEL | EENHEID | ICON. "
+        "Gebruik een Nederlands label (géén Engelse woorden), een standaard eenheid (zoals V, A, kW, %, °C, ppm, L/u, hPa, kg, m³), en een Feather icon naam zoals FiSun, FiBattery, FiThermometer, FiZap, FiBox, FiDroplet, FiCloudRain, FiActivity, FiTruck, FiHome, FiWind. "
+        "Geen emoji, geen uitleg, geen nieuwe regels. "
+        "Voor deze sensor of apparaat: '" + column_name + "'. "
+        "Voorbeelden: \n"
+        "Zonnepaneelspanning | V | FiSun\n"
+        "Zonnepaneelstroom | A | FiZap\n"
+        "Waterstofproductie | L/u | FiDroplet\n"
+        "Stroomverbruik woning | kW | FiHome\n"
+        "Waterstofverbruik auto | L/u | FiTruck\n"
+        "Buitentemperatuur | °C | FiThermometer\n"
+        "Binnentemperatuur | °C | FiThermometer\n"
+        "Luchtdruk | hPa | FiWind\n"
+        "Luchtvochtigheid | % | FiCloudRain\n"
+        "Accuniveau | % | FiBattery\n"
+        "CO2-concentratie binnen | ppm | FiActivity\n"
+        "Waterstofopslag woning | % | FiBox\n"
+        "Waterstofopslag auto | % | FiBox"
+        "\nLet op: Gebruik GEEN Engelse woorden."
+    )
+    # Mapping: key is lowercase, spaties/underscores verwijderd
+    label_translations = {
+        "solarvoltage": "Zonnepaneelspanning",
+        "zonnepaneelspanning": "Zonnepaneelspanning",
+        "solarcurrent": "Zonnepaneelstroom",
+        "zonnepaneelstroom": "Zonnepaneelstroom",
+        "hydrogenproduction": "Waterstofproductie",
+        "waterstofproductie": "Waterstofproductie",
+        "powerconsumption": "Stroomverbruik woning",
+        "stroomverbruikwoning": "Stroomverbruik woning",
+        "hydrogenconsumption": "Waterstofverbruik auto",
+        "waterstofverbruikauto": "Waterstofverbruik auto",
+        "outsidetemperature": "Buitentemperatuur",
+        "buitentemperatuur": "Buitentemperatuur",
+        "insidetemperature": "Binnentemperatuur",
+        "binnentemperatuur": "Binnentemperatuur",
+        "airpressure": "Luchtdruk",
+        "druklucht": "Luchtdruk",
+        "humidity": "Luchtvochtigheid",
+        "luchtvochtigheid": "Luchtvochtigheid",
+        "batterylevel": "Accuniveau",
+        "batterijniveau": "Accuniveau",
+        "co2level": "CO2-concentratie binnen",
+        "co2concentratiebinnen": "CO2-concentratie binnen",
+        "hydrogenstoragehouse": "Waterstofopslag woning",
+        "waterstofopslaghuis": "Waterstofopslag woning",
+        "hydrogenstoragecar": "Waterstofopslag auto",
+        "waterstofopslagauto": "Waterstofopslag auto",
+        # Extra Engelse varianten
+        "humidity": "Luchtvochtigheid",
+        "hydrogen storage car": "Waterstofopslag auto",
+        "hydrogen storage house": "Waterstofopslag woning"
+    }
+    try:
+        response = requests.post(
+            MISTRAL_API_URL,
+            headers={"Authorization": f"Bearer {MISTRAL_API_KEY}"},
+            json={
+                "model": "mistral-tiny",
+                "messages": [
+                    {"role": "system", "content": "Je bent een slimme energie-assistent."},
+                    {"role": "user", "content": prompt}
+                ],
+                "max_tokens": 60,
+                "temperature": 0.1
+            }
+        )
+        print('DEBUG: Mistral API status:', response.status_code)
+        print('DEBUG: Mistral API response:', response.text)
+        if response.status_code == 200:
+            result = response.json().get('choices', [{}])[0].get('message', {}).get('content')
+            import re
+            if result:
+                # 1. Probeer direct pipe-formaat
+                if '|' in result:
+                    parts = [p.strip() for p in result.split('|')]
+                else:
+                    # 2. Probeer op basis van Label/Eenheid/Icon met of zonder nieuwe regels
+                    label = unit = icon = ''
+                    label_match = re.search(r'Label\s*[:|-]?\s*(.+)', result, re.IGNORECASE)
+                    unit_match = re.search(r'Eenheid\s*[:|-]?\s*(.+)', result, re.IGNORECASE)
+                    icon_match = re.search(r'Icon\s*[:|-]?\s*(.+)', result, re.IGNORECASE)
+                    if label_match:
+                        label = label_match.group(1).split('\n')[0].strip()
+                    if unit_match:
+                        unit = unit_match.group(1).split('\n')[0].strip()
+                    if icon_match:
+                        icon = icon_match.group(1).split('\n')[0].strip()
+                    parts = [label, unit, icon]
+                # 3. Fallback: vul aan tot 3 delen
+                while len(parts) < 3:
+                    parts.append('')
+                # 4. Alleen Feather icons toestaan, anders FiCpu
+                feather_icons = {"FiSun", "FiBattery", "FiThermometer", "FiZap", "FiBox", "FiDroplet", "FiCloudRain", "FiActivity", "FiTruck", "FiHome", "FiWind"}
+                icon = parts[2]
+                if icon not in feather_icons:
+                    icon = 'FiCpu'
+                # 5. Super-robuuste label mapping: lowercase, spaties/underscores weg, dan mapping, anders nette fallback
+                raw_label = parts[0].strip().lower().replace('_', '').replace(' ', '')
+                label = label_translations.get(raw_label, None)
+                if not label or label.strip() == '':
+                    label = column_name.replace('_', ' ').capitalize()
+                # Bekende units, anders leeg
+                known_units = {"v", "a", "kw", "%", "°c", "ppm", "l/u", "hpa", "kg", "m³", "m³/h"}
+                unit = parts[1].replace(' ', '').lower()
+                unit = unit if unit in known_units else ''
+                # Speciaal: als unit leeg, fallback
+                if not unit:
+                    fallback_units = {
+                        "humidity": "%",
+                        "battery_level": "%",
+                        "co2_level": "ppm",
+                        "outside_temperature": "°c",
+                        "inside_temperature": "°c",
+                        "air_pressure": "hpa",
+                        "power_consumption": "kw",
+                        "solar_voltage": "v",
+                        "solar_current": "a",
+                        "hydrogen_production": "l/u",
+                        "hydrogen_consumption": "l/u",
+                        "hydrogen_storage_house": "%",
+                        "hydrogen_storage_car": "%"
+                    }
+                    unit = fallback_units.get(column_name.lower(), '')
+                return {'label': label, 'unit': unit, 'icon': icon}
+    except Exception as e:
+        logger.error(f"Mistral API error: {e}")
+    # Fallback
+    return {
+        'label': column_name.replace('_', ' ').capitalize(),
+        'unit': '',
+        'icon': 'FiCpu'
+    }
+
+@app.get("/api/devices/usage")
+async def get_devices_usage():
+    df = data_processor.process_csv("data/energy_consumption.csv")
+    devices = []
+    # Debiet-kolommen: totaal volume in L
+    total_volume_columns = {
+        'Waterstofproductie (L/u)': {'id': 'hydrogen_production', 'label': 'Waterstofproductie', 'icon': 'FiDroplet', 'unit': 'L'},
+        'Waterstofverbruik auto (L/u)': {'id': 'hydrogen_consumption', 'label': 'Waterstofverbruik auto', 'icon': 'FiDroplet', 'unit': 'L'}
+    }
+    # Energie-kolommen: totaal in kWh
+    total_energy_columns = {
+        'Stroomverbruik woning (kW)': {'id': 'power_consumption', 'label': 'Stroomverbruik woning', 'icon': 'FiHome', 'unit': 'kWh'}
+    }
+    for col in df.columns:
+        if col in IGNORE_COLUMNS:
+            continue
+        # Debiet: totaal volume in L
+        if col in total_volume_columns:
+            info = total_volume_columns[col]
+            usage = float(df[col].sum()) * 0.25
+            usage_str = f"{usage:,.2f}".replace(",", "X", 1).replace(".", ",").replace("X", ".")
+            devices.append({
+                'id': info['id'],
+                'label': info['label'],
+                'icon': info['icon'],
+                'unit': info['unit'],
+                'usage': usage_str
+            })
+            continue
+        # Energie: totaal in kWh
+        if col in total_energy_columns:
+            info = total_energy_columns[col]
+            usage = float(df[col].sum()) * 0.25
+            usage_str = f"{usage:,.2f}".replace(",", "X", 1).replace(".", ",").replace("X", ".")
+            devices.append({
+                'id': info['id'],
+                'label': info['label'],
+                'icon': info['icon'],
+                'unit': info['unit'],
+                'usage': usage_str
+            })
+            continue
+        # Sensoren: gemiddelde waarde
+        info = DEVICE_INFO_MAP.get(col)
+        if info:
+            label = info['label']
+            icon = info['icon']
+            unit = info['unit']
+            device_id = info['id']
+        else:
+            ai_info = ai_guess_device(col)
+            label = ai_info['label']
+            unit = ai_info['unit']
+            icon = ai_info['icon']
+            device_id = col.lower().replace(' ', '_')
+        try:
+            usage = float(df[col].mean())
+            usage_str = f"{usage:,.2f}".replace(",", "X", 1).replace(".", ",").replace("X", ".")
+        except Exception:
+            usage_str = ''
+        devices.append({
+            'id': device_id,
+            'label': label,
+            'icon': icon,
+            'unit': unit,
+            'usage': usage_str
+        })
+    return devices
+
+@app.get("/api/devices/current")
+async def get_devices_current():
+    df = data_processor.process_csv("data/energy_consumption.csv")
+    devices = []
+    # Sorteer op tijdstip als kolom bestaat
+    if 'Tijdstip' in df.columns:
+        try:
+            df['Tijdstip'] = pd.to_datetime(df['Tijdstip'], dayfirst=True, errors='coerce')
+            df = df.sort_values('Tijdstip')
+        except Exception as e:
+            print('DEBUG: Fout bij sorteren op Tijdstip:', e)
+    for col in df.columns:
+        if col in IGNORE_COLUMNS:
+            continue
+        info = DEVICE_INFO_MAP.get(col)
+        if info:
+            label = info['label']
+            icon = info['icon']
+            unit = info['unit']
+            device_id = info['id']
+        else:
+            ai_info = ai_guess_device(col)
+            label = ai_info['label']
+            unit = ai_info['unit']
+            icon = ai_info['icon']
+            device_id = col.lower().replace(' ', '_')
+        try:
+            # Pak de laatste NIET-lege waarde
+            current = df[col].dropna().iloc[-1]
+            # Zoek bijbehorend tijdstip (indien aanwezig)
+            tijdstip = None
+            if 'Tijdstip' in df.columns:
+                tijdstip = df.loc[df[col].dropna().index[-1], 'Tijdstip']
+            print(f'DEBUG: {col} -> {current} (tijdstip: {tijdstip})')
+            usage_str = f"{current:,.2f}".replace(",", "X", 1).replace(".", ",").replace("X", ".")
+        except Exception as e:
+            print(f'DEBUG: Fout bij {col}:', e)
+            usage_str = ''
+        devices.append({
+            'id': device_id,
+            'label': label,
+            'icon': icon,
+            'unit': unit,
+            'current_usage': usage_str
+        })
+    return devices
+
 @app.on_event("shutdown")
 async def shutdown_event():
     """Clean up resources on shutdown."""
     data_processor.close()
-    user_db.connection.close() 
+    user_db.connection.close()
+
+print('DEBUG: MISTRAL_API_URL:', MISTRAL_API_URL)
+print('DEBUG: MISTRAL_API_KEY:', MISTRAL_API_KEY) 

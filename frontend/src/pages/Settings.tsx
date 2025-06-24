@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
-import { FiUser, FiBell, FiShield, FiImage, FiGlobe, FiLock, FiCamera, FiCheckCircle, FiLoader } from 'react-icons/fi';
+import { FiUser, FiBell, FiShield, FiImage, FiGlobe, FiLock, FiCamera, FiCheckCircle, FiLoader, FiCpu, FiEye } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 import authService from '../services/auth';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import { useLocation } from 'react-router-dom';
+import * as FiIcons from 'react-icons/fi';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
@@ -38,6 +39,27 @@ const Settings = () => {
     new_password: '',
     confirm_password: '',
   });
+
+  const [devices, setDevices] = useState<any[]>([]);
+  const [devicesLoading, setDevicesLoading] = useState(false);
+  const [deviceVisibility, setDeviceVisibility] = useState<{ [key: string]: boolean }>({});
+
+  // Fetch devices on mount
+  useEffect(() => {
+    if (activeSection === 'devices') {
+      setDevicesLoading(true);
+      axios.get(`${API_URL}/api/devices/usage`).then(res => {
+        setDevices(res.data);
+        // Load visibility from localStorage or default to true
+        const vis = JSON.parse(localStorage.getItem('deviceVisibility') || '{}');
+        const newVis: { [key: string]: boolean } = {};
+        res.data.forEach((d: any) => {
+          newVis[d.id] = vis[d.id] !== undefined ? vis[d.id] : true;
+        });
+        setDeviceVisibility(newVis);
+      }).finally(() => setDevicesLoading(false));
+    }
+  }, [activeSection]);
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,10 +105,17 @@ const Settings = () => {
     }
   };
 
+  const handleToggleDevice = (deviceId: string) => {
+    const newVis = { ...deviceVisibility, [deviceId]: !deviceVisibility[deviceId] };
+    setDeviceVisibility(newVis);
+    localStorage.setItem('deviceVisibility', JSON.stringify(newVis));
+  };
+
   const navItems = [
     { id: 'profile', label: 'Profiel', icon: FiUser },
     { id: 'notifications', label: 'Notificaties', icon: FiBell },
     { id: 'security', label: 'Beveiliging', icon: FiShield },
+    { id: 'devices', label: 'Apparaten', icon: FiCpu },
     { id: 'appearance', label: 'Uiterlijk', icon: FiImage },
     { id: 'language', label: 'Taal & Regio', icon: FiGlobe },
   ];
@@ -214,6 +243,40 @@ const Settings = () => {
                   </section>
                 )}
                 
+                {activeSection === 'devices' && (
+                  <section id="devices" className="bg-gradient-to-br from-purple-700/60 to-sky-700/40 rounded-2xl shadow-2xl p-8 border border-white/20 max-w-3xl mx-auto">
+                    <h2 className="text-2xl font-bold text-primary-100 mb-6 flex items-center gap-2"><FiCpu /> Apparaten</h2>
+                    {devicesLoading ? (
+                      <div className="flex items-center gap-2 text-primary-200"><FiLoader className="animate-spin" /> Laden...</div>
+                    ) : (
+                      <div className="space-y-4">
+                        {devices.length === 0 && <div className="text-primary-200">Geen apparaten gevonden.</div>}
+                        {devices.map((device: any) => {
+                          const Icon = FiIcons[device.icon] || FiCpu;
+                          return (
+                            <div key={device.id} className="flex items-center justify-between bg-white/10 rounded-xl p-4 shadow border border-white/10">
+                              <div className="flex items-center gap-4">
+                                <Icon className="text-2xl text-sky-400" />
+                                <div>
+                                  <div className="font-bold text-primary-100 text-lg">{device.label}</div>
+                                  <div className="text-primary-300 text-sm">Gebruik: {device.usage !== null ? `${device.usage.toLocaleString(undefined, { maximumFractionDigits: 2 })} ${device.unit}` : 'n.v.t.'}</div>
+                                </div>
+                              </div>
+                              <button
+                                className={`flex items-center gap-2 px-4 py-2 rounded-xl font-semibold shadow transition-all ${deviceVisibility[device.id] ? 'bg-gradient-to-r from-sky-500 to-purple-600 text-white' : 'bg-gray-200 text-primary-900'}`}
+                                onClick={() => handleToggleDevice(device.id)}
+                              >
+                                <FiEye className={deviceVisibility[device.id] ? '' : 'opacity-40'} />
+                                {deviceVisibility[device.id] ? 'Toon in Dashboard' : 'Verborgen'}
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </section>
+                )}
+
                 {/* Placeholder for other sections */}
                 {(activeSection === 'notifications' || activeSection === 'appearance' || activeSection === 'language') && (
                   <section className="bg-white/10 rounded-2xl shadow-xl p-8 border border-white/20">
