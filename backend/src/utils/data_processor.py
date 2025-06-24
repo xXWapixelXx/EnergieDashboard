@@ -45,7 +45,9 @@ class DataProcessor:
                            delimiter='\t',
                            encoding='utf-8',
                            decimal=',',  # Handle European decimal format
-                           parse_dates=['Tijdstip'])
+                           parse_dates=['Tijdstip'],
+                           dayfirst=True,  # Explicitly set dayfirst for European format
+                           date_parser=lambda x: pd.to_datetime(x, format='%d-%m-%Y %H:%M'))
             
             # Rename columns to match database schema
             column_mapping = {

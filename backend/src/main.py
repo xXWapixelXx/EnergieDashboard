@@ -279,7 +279,7 @@ async def get_latest_measurements(limit: int = 100) -> List[Dict[str, Any]]:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/measurements/daily")
-async def get_daily_aggregations(days: int = 7) -> List[Dict[str, Any]]:
+async def get_daily_aggregations(days: int = 30) -> List[Dict[str, Any]]:
     """Get daily aggregations for the specified number of days."""
     try:
         return data_processor.get_daily_aggregations(days)
