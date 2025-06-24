@@ -425,8 +425,6 @@ def ai_guess_device(column_name):
                 "temperature": 0.1
             }
         )
-        print('DEBUG: Mistral API status:', response.status_code)
-        print('DEBUG: Mistral API response:', response.text)
         if response.status_code == 200:
             result = response.json().get('choices', [{}])[0].get('message', {}).get('content')
             import re
@@ -614,5 +612,6 @@ async def shutdown_event():
     data_processor.close()
     user_db.connection.close()
 
-print('DEBUG: MISTRAL_API_URL:', MISTRAL_API_URL)
-print('DEBUG: MISTRAL_API_KEY:', MISTRAL_API_KEY) 
+# Remove debug prints for Mistral API
+# print('DEBUG: MISTRAL_API_URL:', MISTRAL_API_URL)
+# print('DEBUG: MISTRAL_API_KEY:', MISTRAL_API_KEY) 

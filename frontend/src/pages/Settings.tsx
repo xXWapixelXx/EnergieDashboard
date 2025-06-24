@@ -7,6 +7,7 @@ import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import { useLocation } from 'react-router-dom';
 import * as FiIcons from 'react-icons/fi';
+import { useDeviceVisibility } from '../context/DeviceVisibilityContext';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
@@ -42,7 +43,7 @@ const Settings = () => {
 
   const [devices, setDevices] = useState<any[]>([]);
   const [devicesLoading, setDevicesLoading] = useState(false);
-  const [deviceVisibility, setDeviceVisibility] = useState<{ [key: string]: boolean }>({});
+  const { deviceVisibility, setDeviceVisibility, toggleDeviceVisibility } = useDeviceVisibility();
 
   // Fetch devices on mount
   useEffect(() => {
@@ -50,11 +51,10 @@ const Settings = () => {
       setDevicesLoading(true);
       axios.get(`${API_URL}/api/devices/usage`).then(res => {
         setDevices(res.data);
-        // Load visibility from localStorage or default to true
-        const vis = JSON.parse(localStorage.getItem('deviceVisibility') || '{}');
-        const newVis: { [key: string]: boolean } = {};
+        // Load visibility from context or default to true
+        const newVis: { [key: string]: boolean } = { ...deviceVisibility };
         res.data.forEach((d: any) => {
-          newVis[d.id] = vis[d.id] !== undefined ? vis[d.id] : true;
+          if (newVis[d.id] === undefined) newVis[d.id] = true;
         });
         setDeviceVisibility(newVis);
       }).finally(() => setDevicesLoading(false));
@@ -106,9 +106,7 @@ const Settings = () => {
   };
 
   const handleToggleDevice = (deviceId: string) => {
-    const newVis = { ...deviceVisibility, [deviceId]: !deviceVisibility[deviceId] };
-    setDeviceVisibility(newVis);
-    localStorage.setItem('deviceVisibility', JSON.stringify(newVis));
+    toggleDeviceVisibility(deviceId);
   };
 
   const navItems = [
