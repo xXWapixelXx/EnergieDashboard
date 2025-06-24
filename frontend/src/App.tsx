@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard';
 import Historiek from './pages/Historiek';
 import Admin from './pages/Admin';
 import Alerts from './pages/Alerts';
+import Settings from './pages/Settings';
 import authService from './services/auth';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -35,6 +36,7 @@ function App() {
       <Route path="/historiek" element={<ProtectedRoute><Historiek /></ProtectedRoute>} />
       <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
       <Route path="/alerts" element={<ProtectedRoute><Alerts /></ProtectedRoute>} />
+      <Route path="/instellingen" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/dashboard" />} />
     </Routes>
   );

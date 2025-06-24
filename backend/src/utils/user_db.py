@@ -132,6 +132,23 @@ class UserDB:
         finally:
             cursor.close()
 
+    def update_user_password(self, user_id: int, new_password: str) -> bool:
+        """Update only the user's password."""
+        try:
+            cursor = self.connection.cursor()
+            password_hash = get_password_hash(new_password)
+            cursor.execute(
+                "UPDATE users SET password_hash = %s WHERE id = %s",
+                (password_hash, user_id)
+            )
+            self.connection.commit()
+            return cursor.rowcount > 0
+        except Error as e:
+            logger.error(f"Error updating user password: {e}")
+            raise
+        finally:
+            cursor.close()
+
     def update_last_login(self, user_id: int):
         """Update user's last login timestamp."""
         try:

@@ -106,7 +106,7 @@ const NotificationBell: React.FC<{
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
   return (
-    <div className="fixed top-8 right-80 z-40">
+    <div className="fixed top-8 right-60 z-40">
        <motion.button
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -204,9 +204,9 @@ const ProfileButton: React.FC<{ user: User | null }> = ({ user }) => {
           animate={{ opacity: 1, y: 0 }} 
           className="absolute right-0 mt-3 w-64 bg-slate-900/90 backdrop-blur-xl border border-slate-700 rounded-2xl shadow-2xl z-50 p-2 flex flex-col gap-2"
         >
-          <button className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800 text-sky-300"><FiUser /> Mijn Profiel</button>
-          <button className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800 text-sky-300"><FiSettings /> Account Instellingen</button>
-          <button className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800 text-sky-300"><FiShield /> Privacy & Beveiliging</button>
+          <button className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800 text-sky-300" onClick={() => { navigate('/instellingen?section=profile'); setShowProfileMenu(false); }}><FiUser /> Mijn Profiel</button>
+          <button className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800 text-sky-300" onClick={() => { navigate('/instellingen?section=profile'); setShowProfileMenu(false); }}><FiSettings /> Account Instellingen</button>
+          <button className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800 text-sky-300" onClick={() => { navigate('/instellingen?section=security'); setShowProfileMenu(false); }}><FiShield /> Privacy & Beveiliging</button>
           <button className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800 text-sky-300"><FiBarChart2 /> Help & Ondersteuning</button>
           <div className="h-px bg-slate-700 my-1"></div>
           <button 

@@ -20,6 +20,10 @@ class UserUpdate(BaseModel):
     is_active: Optional[bool] = None
     role: Optional[str] = None
 
+class PasswordUpdate(BaseModel):
+    current_password: str
+    new_password: constr(min_length=8)
+
 class UserInDB(UserBase):
     id: int
     role: str

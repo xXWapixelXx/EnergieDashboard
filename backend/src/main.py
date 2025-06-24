@@ -5,7 +5,7 @@ from typing import List, Dict, Any
 from src.utils.data_processor import DataProcessor
 from src.utils.user_db import UserDB
 from src.utils.auth import create_access_token, create_refresh_token, verify_token
-from src.models.user import UserCreate, UserInDB, Token, UserUpdate
+from src.models.user import UserCreate, UserInDB, Token, UserUpdate, PasswordUpdate
 import logging
 import os
 import asyncio
@@ -163,6 +163,28 @@ async def update_user_me(
         )
     return updated_user
 
+@app.post("/users/me/change-password")
+async def change_password(
+    password_update: PasswordUpdate,
+    current_user: UserInDB = Depends(get_current_user)
+):
+    # Verify current password
+    if not user_db.verify_user_credentials(current_user.username, password_update.current_password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Incorrect current password"
+        )
+    
+    # Update to new password
+    success = user_db.update_user_password(current_user.id, password_update.new_password)
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Could not update password"
+        )
+        
+    return {"message": "Password updated successfully"}
+
 # Admin endpoints
 @app.get("/users/", response_model=List[UserInDB])
 async def read_users(current_user: UserInDB = Depends(get_current_user)):
@@ -228,10 +250,15 @@ async def websocket_endpoint(websocket: WebSocket):
 # Notification endpoints
 @app.get("/api/notifications")
 async def get_notifications(current_user: UserInDB = Depends(get_current_user)):
-    # For now, only admins can see all notifications
-    if current_user.role not in ["admin", "superadmin"]:
+    # Allow all roles to access notifications for now
+    # TODO: In the future, filter notifications for users to only their own
+    if current_user.role in ["admin", "superadmin"]:
+        return user_db.get_all_notifications()
+    elif current_user.role == "user":
+        # For now, return all notifications to users as well (replace with user-specific notifications later)
+        return user_db.get_all_notifications()
+    else:
         raise HTTPException(status_code=403, detail="Not enough permissions")
-    return user_db.get_all_notifications()
 
 @app.post("/api/notifications/read/{notification_id}")
 async def mark_notification_as_read(notification_id: int, current_user: UserInDB = Depends(get_current_user)):
