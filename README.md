@@ -160,12 +160,6 @@ Alle data wordt veilig opgeslagen in een relationele database en automatisch ver
 
 **Tip:** Zorg dat zowel backend als frontend tegelijk draaien voor een werkende applicatie.
 
----
-
-## 🖼️ Screenshots
-> Voeg hier screenshots toe van het dashboard, instellingen, alerts, etc.
-
----
 
 ## 💻 Demo
 - Lokaal draaien: zie installatie hierboven
