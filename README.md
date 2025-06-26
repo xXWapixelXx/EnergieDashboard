@@ -168,8 +168,11 @@ Alle data wordt veilig opgeslagen in een relationele database en automatisch ver
 ---
 
 ## 👥 Team / Contributors
-- [Jouw naam]
-- [Teamleden toevoegen]
+- [Wapixel]
+- [Joey]
+- [Krishna]
+- [Sem]
+- [Issa]
 
 ---
 
